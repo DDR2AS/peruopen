@@ -4,6 +4,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 Los **datos** se actualizan aparte (snapshots en la vitrina) y no generan
 versiones nuevas del paquete.
 
+## [0.1.0a4] - 2026-11-22
+
+### Corregido
+
+- Al actualizar peruopen, la etiqueta de datos en caché (vigente 24 h) podía no
+  conocer los datasets nuevos y las consultas fallaban con "Table … does not
+  exist" (por ejemplo, en el servidor MCP). Ahora:
+  - la etiqueta en caché se descarta cuando cambia la versión de la librería;
+  - si una consulta menciona una tabla desconocida, se relee la etiqueta una
+    vez y se reintenta.
+- `pe.macro.search()` ya no confunde "dólar" con precios en US$, y devuelve
+  también el grupo de la serie (`series_group`) para que los nombres cortos
+  (p. ej. "IPC") se entiendan.
+- El servidor MCP devuelve los errores de SQL como mensaje, sin traceback.
+
 ## [0.1.0a3] - 2026-11-22
 
 ### Agregado

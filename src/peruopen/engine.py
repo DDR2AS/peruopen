@@ -17,7 +17,12 @@ import duckdb
 
 from .config import load_settings
 from .data_manager import DataManager
-from .exceptions import ReadOnlyQueryError
+from .exceptions import PeruOpenError, ReadOnlyQueryError
+
+
+class _UnknownTableError(ReadOnlyQueryError):
+    """La consulta menciona una tabla que la etiqueta en caché no conoce."""
+
 
 _IDENTIFIER = re.compile(r"^[a-z][a-z0-9_]*$")
 MAX_SQL_LENGTH = 10_000
@@ -100,7 +105,25 @@ class PeruOpen:
     ) -> duckdb.DuckDBPyRelation:
         """Ejecuta SQL. Devuelve una relación de DuckDB: .df(), .pl(), .arrow() o .fetchall()."""
         self._register(self.referenced(sql))
-        return self.con.sql(sql, params=params)
+        try:
+            return self.con.sql(sql, params=params)
+        except duckdb.CatalogException:
+            # ¿Tabla desconocida? Puede ser un dataset nuevo que la etiqueta en
+            # caché aún no conoce: se revisa la vitrina una vez y se reintenta.
+            if not self._try_refresh():
+                raise
+            self._register(self.referenced(sql))
+            return self.con.sql(sql, params=params)
+
+    def _try_refresh(self) -> bool:
+        """Relee la etiqueta de la vitrina si no se hizo ya en esta sesión."""
+        if self.data.refreshed or self.data.snapshot or self.settings.offline:
+            return False
+        try:
+            self.data.manifest(refresh=True)
+        except PeruOpenError:
+            return False
+        return True
 
     def table(self, name: str) -> duckdb.DuckDBPyRelation:
         self.data.entry(name)  # error claro si no existe
@@ -116,6 +139,14 @@ class PeruOpen:
     ) -> dict[str, Any]:
         """Consulta para agentes (MCP): solo un SELECT, sin acceso a archivos
         fuera de la caché, con límite de filas y timeout."""
+        try:
+            return self._query_readonly(sql, limit=limit, timeout_s=timeout_s)
+        except _UnknownTableError:
+            if not self._try_refresh():
+                raise
+            return self._query_readonly(sql, limit=limit, timeout_s=timeout_s)
+
+    def _query_readonly(self, sql: str, *, limit: int, timeout_s: float) -> dict[str, Any]:
         cleaned = sql.strip().rstrip(";").strip()
         if not cleaned:
             raise ReadOnlyQueryError("La consulta está vacía.")
@@ -153,6 +184,8 @@ class PeruOpen:
                 raise ReadOnlyQueryError(
                     f"La consulta superó el límite de {timeout_s:.0f} s."
                 ) from exc
+            except duckdb.CatalogException as exc:
+                raise _UnknownTableError(str(exc)) from exc
             except duckdb.Error as exc:
                 raise ReadOnlyQueryError(str(exc)) from exc
             finally:

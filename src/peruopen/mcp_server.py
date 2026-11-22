@@ -17,6 +17,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+import duckdb
+
 from .engine import DEFAULT_LIMIT, MAX_LIMIT, PeruOpen, _jsonable
 from .exceptions import PeruOpenError
 
@@ -55,7 +57,7 @@ def build_server(conn: PeruOpen | None = None) -> Any:
         # vacía…) vuelven al agente como un mensaje claro, sin traceback.
         try:
             return fn()
-        except (PeruOpenError, ValueError, LookupError) as exc:
+        except (PeruOpenError, ValueError, LookupError, duckdb.Error) as exc:
             raise ToolError(str(exc)) from exc
 
     @mcp.tool

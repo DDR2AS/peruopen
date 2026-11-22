@@ -41,6 +41,8 @@ class DataManager:
         self.cache_dir = settings.cache_dir
         self.objects_dir = self.cache_dir / "objects"
         self._manifest: dict[str, Any] | None = None
+        # True cuando la etiqueta se leyó de la vitrina en esta sesión (no de la caché).
+        self.refreshed = False
 
     # -- acceso a la vitrina (http/https o carpeta local) -------------------
 
@@ -111,8 +113,14 @@ class DataManager:
     def _latest_manifest(self, refresh: bool) -> dict[str, Any]:
         cached = self.cache_dir / "manifest.json"
         checked = self.cache_dir / "manifest.checked"
-        age = time.time() - float(checked.read_text()) if checked.exists() else float("inf")
-        fresh = age < self.settings.check_interval.total_seconds()
+        # "<timestamp> <versión de peruopen>": si la librería se actualizó, la
+        # etiqueta en caché puede no conocer datasets nuevos, así que se revisa.
+        stamp, _, version = checked.read_text().partition(" ") if checked.exists() else ("", "", "")
+        try:
+            age = time.time() - float(stamp)
+        except ValueError:
+            age = float("inf")
+        fresh = age < self.settings.check_interval.total_seconds() and version == __version__
 
         if cached.exists() and (self.settings.offline or (fresh and not refresh)):
             return json.loads(cached.read_text(encoding="utf-8"))  # type: ignore[no-any-return]
@@ -138,7 +146,8 @@ class DataManager:
         tmp = cached.with_name("manifest.json.tmp")
         tmp.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         os.replace(tmp, cached)
-        checked.write_text(str(time.time()))
+        checked.write_text(f"{time.time()} {__version__}")
+        self.refreshed = True
         return manifest
 
     def _snapshot_manifest(self, snapshot: str) -> dict[str, Any]:
