@@ -31,11 +31,12 @@ import peruopen as pe
 
 pe.list_datasets()  # qué hay
 pe.macro.uit(2026)  # -> 5500
-pe.macro.tipo_cambio(desde="2026-01-01").df()  # pandas (o .pl() para polars)
+pe.macro.exchange_rate(start="2026-01-01").df()  # pandas (o .pl() para polars)
+pe.macro.search("morosidad").df()  # buscar entre todas las series del BCRP
 
 pe.query("""
-    SELECT year(fecha) AS anio, round(avg(valor), 3) AS tc_promedio
-    FROM macro_series WHERE serie = 'PD04638PD'
+    SELECT year(date) AS year, round(avg(value), 3) AS fx_avg
+    FROM bcrp_daily WHERE code = 'PD04638PD'
     GROUP BY 1 ORDER BY 1
 """).df()
 ```
@@ -58,7 +59,7 @@ nada para actualizar.
 {"mcpServers": {"peruopen": {"command": "uvx", "args": ["--from", "peruopen[mcp]", "peruopen-mcp"]}}}
 ```
 
-Expone tres tools: `list_datasets`, `describe_dataset` y `query` (SQL de solo
+Expone cuatro tools: `list_datasets`, `describe_dataset`, `search_series` y `query` (SQL de solo
 lectura, sin acceso a otros archivos, con límite de filas y timeout).
 
 ### Desarrollo: probar en local sin la nube
@@ -73,8 +74,9 @@ PERUOPEN_BASE_URL="$PWD/data/vitrina" python -c "import peruopen as pe; print(pe
 
 | Dataset | Fuente | Contenido | Detalle |
 |---|---|---|---|
-| `macro_series` | BCRP | Tipo de cambio (interbancario y SBS), inflación, tasa de referencia y PBI, desde 2000 | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/macro_series.md) |
-| `macro_uit` | SUNAT | Valor de la UIT por año desde 1994, con su Decreto Supremo | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/macro_uit.md) |
+| `bcrp_catalog` | BCRP | Catálogo de **todas** las series del BCRP (~17 000): nombre, unidad, frecuencia | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/bcrp.md) |
+| `bcrp_daily` · `bcrp_monthly` · `bcrp_quarterly` · `bcrp_annual` | BCRP | Datos de todas esas series: tipo de cambio, inflación, tasas, PBI, crédito, balanza comercial… | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/bcrp.md) |
+| `sunat_uit` | SUNAT | Valor de la UIT por año desde 1994, con su Decreto Supremo | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/sunat_uit.md) |
 
 ## Licencia
 

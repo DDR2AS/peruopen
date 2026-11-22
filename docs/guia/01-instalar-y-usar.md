@@ -37,20 +37,39 @@ import peruopen as pe
 pe.list_datasets()
 
 # Valor de la UIT
-pe.macro.uit()  # año actual  -> 5500
+pe.macro.uit()  # año actual -> 5500
 pe.macro.uit(2020)  # -> 4300
 
 # Tipo de cambio diario (S/ por US$)
-pe.macro.tipo_cambio(desde="2026-01-01").df()  # interbancario, venta
-pe.macro.tipo_cambio(tipo="sbs", lado="compra", desde="2026-11-01").df()
+pe.macro.exchange_rate(start="2026-01-01").df()  # interbancario, venta
+pe.macro.exchange_rate(kind="sbs", side="buy", start="2026-11-01").df()
 
-# Inflación de Lima Metropolitana (%)
-pe.macro.inflacion(desde="2025-01-01").df()  # variación en 12 meses
-pe.macro.inflacion(periodo="mensual", desde="2026-01-01").df()
+# Inflación de Lima Metropolitana (%), tasa de referencia y PBI
+pe.macro.inflation(start="2025-01-01").df()  # variación en 12 meses
+pe.macro.inflation(period="monthly", start="2026-01-01").df()
+pe.macro.policy_rate(start="2024-01-01").df()
+pe.macro.gdp_growth(start="2024-01-01").df()
 ```
 
-La **primera** consulta tarda uno o dos segundos porque descarga los datos.
+La **primera** consulta tarda unos segundos porque descarga los datos.
 Las siguientes son instantáneas: los datos quedan guardados en tu computadora.
+
+## Todas las series del BCRP
+
+peruopen incluye **todas** las series que publica el BCRP (~17 000). Para
+encontrar la que necesitas, busca por palabras, sin importar tildes ni mayúsculas:
+
+```python
+pe.macro.search("morosidad").df()
+pe.macro.search("exportaciones cobre", frequency="monthly").df()
+pe.macro.search("reservas internacionales").df()
+```
+
+Y luego pide sus datos por código:
+
+```python
+pe.macro.series("PN01273PM", start="2020-01-01").df()
+```
 
 ## Elegir el formato del resultado
 
@@ -68,31 +87,40 @@ Todas las consultas devuelven un objeto que se convierte al formato que necesite
 
 Cada dataset es una tabla. Puedes escribir cualquier consulta SQL (dialecto DuckDB):
 
+| Tabla | Contenido |
+|---|---|
+| `bcrp_catalog` | Nombre, unidad y frecuencia de cada serie del BCRP |
+| `bcrp_daily`, `bcrp_monthly`, `bcrp_quarterly`, `bcrp_annual` | Datos de las series: `code`, `date`, `value` |
+| `sunat_uit` | UIT por año: `year`, `value`, `legal_basis` |
+
 ```python
 # Tipo de cambio promedio por año
 pe.query("""
-    SELECT year(fecha) AS anio, round(avg(valor), 3) AS tc_promedio
-    FROM macro_series
-    WHERE serie = 'PD04638PD'
+    SELECT year(date) AS year, round(avg(value), 3) AS fx_avg
+    FROM bcrp_daily
+    WHERE code = 'PD04638PD'
     GROUP BY 1 ORDER BY 1
 """).df()
 
-# ¿Cuántos dólares son 10 UIT al tipo de cambio de hoy?
+# Inflación vs. tasa de referencia, con los nombres del catálogo
 pe.query("""
-    SELECT u.valor * 10 / t.valor AS dolares
-    FROM macro_uit u,
-         (SELECT valor FROM macro_series WHERE serie = 'PD04638PD'
-          ORDER BY fecha DESC LIMIT 1) t
-    WHERE u.anio = year(current_date)
+    SELECT c.name, d.date, d.value
+    FROM bcrp_monthly d JOIN bcrp_catalog c USING (code)
+    WHERE d.code IN ('PN01273PM', 'PD04722MM') AND d.date >= DATE '2024-01-01'
+    ORDER BY d.date
+""").df()
+
+# ¿Cuántos dólares son 10 UIT al tipo de cambio más reciente?
+pe.query("""
+    SELECT u.value * 10 / fx.value AS dollars
+    FROM sunat_uit u,
+         (SELECT value FROM bcrp_daily WHERE code = 'PD04638PD'
+          ORDER BY date DESC LIMIT 1) fx
+    WHERE u.year = year(current_date)
 """).fetchone()
 ```
 
-Los códigos de las series (`PD04638PD`, etc.) están en
-[docs/datasets/macro_series.md](../datasets/macro_series.md). También puedes verlos con:
-
-```python
-pe.query("SELECT DISTINCT serie, nombre, frecuencia FROM macro_series ORDER BY 1").df()
-```
+El detalle de cada tabla está en [docs/datasets/](../datasets/).
 
 ## Actualización de los datos
 
@@ -104,7 +132,7 @@ nuevos y los descarga sola.
 | Ver qué versión de los datos tengo | `pe.status()` |
 | Buscar datos nuevos ahora mismo | `pe.update()` |
 | Trabajar sin internet | variable de entorno `PERUOPEN_OFFLINE=1` |
-| Que un análisis dé siempre el mismo resultado | `datos = pe.connect(snapshot="2026-11-22")` y luego `datos.query(...)` |
+| Que un análisis dé siempre el mismo resultado | `data = pe.connect(snapshot="...")` y luego `data.query(...)` o `pe.macro.series(..., conn=data)` |
 | Borrar los datos descargados | `pe.clear_cache()` |
 
 ## Problemas comunes
@@ -113,6 +141,7 @@ nuevos y los descarga sola.
 |---|---|
 | `ModuleNotFoundError: No module named 'peruopen'` | Activa el entorno virtual donde lo instalaste (`peruopen-env\Scripts\activate`) |
 | `ModuleNotFoundError: No module named 'pandas'` al usar `.df()` | `pip install pandas` |
+| `La serie 'XXX' no está en el catálogo del BCRP` | Busca el código correcto con `pe.macro.search("palabras")` |
 | `No existe el dataset 'xxx'. ¿Quisiste decir…?` | Revisa el nombre con `pe.list_datasets()` |
 | `No se pudo leer la vitrina … y no hay caché` | No hay internet y nunca se descargó nada. Conéctate una vez |
 | Advertencia `No se pudo revisar si hay datos nuevos` | Sin internet: está usando los datos que ya tenías. Es normal |

@@ -2,8 +2,16 @@ from datetime import date
 
 import pytest
 
-from pipelines.extractors.bcrp import parse_payload, parse_period, parse_value
+from pipelines.extractors.bcrp import (
+    decode_mixed,
+    parse_batch,
+    parse_catalog,
+    parse_period,
+    parse_value,
+)
 from pipelines.extractors.uit import parse_uit
+
+TODAY = date(2026, 11, 22)
 
 
 @pytest.mark.parametrize(
@@ -13,33 +21,75 @@ from pipelines.extractors.uit import parse_uit
         ("01.Set.25", date(2025, 9, 1)),  # septiembre diario = "Set"
         ("15.Dic.99", date(1999, 12, 15)),
         ("Sep.2025", date(2025, 9, 1)),  # septiembre mensual = "Sep"
-        ("Ene.2000", date(2000, 1, 1)),
+        ("Ene.1992", date(1992, 1, 1)),
+        ("T1.12", date(2012, 1, 1)),
+        ("T3.85", date(1985, 7, 1)),
+        ("T4.26", date(2026, 10, 1)),
+        ("2025", date(2025, 1, 1)),
+        ("1850", date(1850, 1, 1)),
     ],
 )
 def test_parse_period(raw: str, expected: date) -> None:
-    assert parse_period(raw) == expected
+    assert parse_period(raw, TODAY) == expected
 
 
-def test_parse_period_rejects_unknown_format() -> None:
+@pytest.mark.parametrize("raw", ["T5.25", "Xyz.2025", "25", "2025-01-01"])
+def test_parse_period_rejects_unknown_format(raw: str) -> None:
     with pytest.raises(ValueError):
-        parse_period("T1.2025")
+        parse_period(raw, TODAY)
 
 
 def test_parse_value() -> None:
     assert parse_value("3.5415") == pytest.approx(3.5415)
     assert parse_value("n.d.") is None
     assert parse_value(" ") is None
+    assert parse_value("abc") is None
 
 
-def test_parse_payload_skips_missing_values() -> None:
+def test_parse_batch_maps_columns_and_skips_missing() -> None:
     payload = {
+        "config": {"series": [{"name": "a"}, {"name": "b"}]},
         "periods": [
-            {"name": "05.Ago.25", "values": ["3.55"]},
-            {"name": "06.Ago.25", "values": ["n.d."]},
-            {"name": "07.Ago.25", "values": ["3.54"]},
-        ]
+            {"name": "Feb.2025", "values": ["2", "n.d."]},
+            {"name": "Ene.2025", "values": ["1", "10"]},
+        ],
     }
-    assert parse_payload(payload) == [(date(2025, 8, 5), 3.55), (date(2025, 8, 7), 3.54)]
+    rows = sorted(parse_batch(payload, ["A1", "B1"], TODAY))
+    assert rows == [
+        ("A1", date(2025, 1, 1), 1.0),
+        ("A1", date(2025, 2, 1), 2.0),
+        ("B1", date(2025, 1, 1), 10.0),
+    ]
+
+
+def test_parse_batch_detects_missing_series() -> None:
+    payload = {"config": {"series": [{"name": "a"}]}, "periods": []}
+    with pytest.raises(ValueError, match="1 series para 2"):
+        list(parse_batch(payload, ["A1", "B1"], TODAY))
+
+
+def test_decode_mixed_handles_latin1_and_utf8_in_same_file() -> None:
+    raw = "Índice".encode() + b" | " + "Índice".encode("latin-1")
+    assert decode_mixed(raw) == "Índice | Índice"
+
+
+def test_parse_catalog() -> None:
+    header = ";".join(f"c{i}" for i in range(18)).replace("c0", "Código de serie", 1)
+    line = (
+        "PD04638PD;Tipo de cambio;Tipo de cambio;TC venta;url;url;S/ por US$;;PE;BCRP;Diaria;"
+        "2022-03-24;Diarias;Estadística;2026-10-23;1997-01-02;2026-10-22;"
+    )
+    bad_freq = "XX1;a;b;c;;;;;;;Semanal;;;;;;;"
+    raw = "\n".join([header, line, bad_freq]).encode("latin-1")
+    rows = parse_catalog(raw)
+    assert len(rows) == 1
+    row = rows[0]
+    assert (row.code, row.frequency, row.unit, row.updated_on) == (
+        "PD04638PD",
+        "daily",
+        "S/ por US$",
+        date(2026, 10, 23),
+    )
 
 
 def test_parse_uit_handles_mixed_encoding_and_number_formats() -> None:

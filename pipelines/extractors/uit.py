@@ -58,9 +58,9 @@ def extract(spec: DatasetSpec, run_id: str) -> ExtractionResult:
         raise ValueError("No se encontraron filas de UIT en la página de SUNAT (¿cambió el HTML?)")
     table = pa.table(
         {
-            "anio": [r[0] for r in rows],
-            "valor": [r[1] for r in rows],
-            "base_legal": [r[2] for r in rows],
+            "year": [r[0] for r in rows],
+            "value": [r[1] for r in rows],
+            "legal_basis": [r[2] for r in rows],
         },
         schema=spec.arrow_schema(),
     )

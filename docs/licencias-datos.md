@@ -15,5 +15,5 @@ fuente oficial**. Cada uno registra su `reuse_policy` en el catálogo:
 
 | Dataset | Estado | Licencia / términos | Atribución | Redistribución | Evidencia |
 |---|---|---|---|---|---|
-| `macro_series` (BCRP) | `open-attribution` | Condiciones de uso de BCRPData: "puede reproducirse total o parcialmente, sin autorización expresa, siempre y cuando se cite la fuente" | Sí | Sí | https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso |
-| `macro_uit` (SUNAT) | `open-attribution` | Dato normativo (D.S. del MEF), publicado por SUNAT | Sí (se cita el D.S.) | Sí | https://www.sunat.gob.pe/indicestasas/uit.html |
+| `bcrp_catalog` y `bcrp_*` (BCRP) | `open-attribution` | Condiciones de uso de BCRPData: "puede reproducirse total o parcialmente, sin autorización expresa, siempre y cuando se cite la fuente" | Sí | Sí | https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso |
+| `sunat_uit` (SUNAT) | `open-attribution` | Dato normativo (D.S. del MEF), publicado por SUNAT | Sí (se cita el D.S.) | Sí | https://www.sunat.gob.pe/indicestasas/uit.html |

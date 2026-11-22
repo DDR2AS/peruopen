@@ -1,20 +1,31 @@
 {
-  "macro_series": {
-    "description": "Series macroeconómicas oficiales del BCRP: tipo de cambio (interbancario y SBS), inflación (IPC Lima), tasa de referencia y PBI. Formato largo: una fila por serie y fecha.",
+  "bcrp_catalog": {
+    "description": "Catálogo de todas las series estadísticas del BCRP (BCRPData): código, nombre, categoría, unidad, frecuencia y en qué tabla están sus datos. Úsalo para buscar el código de una serie.",
     "module": "macro",
-    "extractor": "bcrp",
+    "extractor": "bcrp_catalog",
     "source_name": "Banco Central de Reserva del Perú (BCRPData)",
     "source_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/",
-    "update_frequency": "Diaria (tipo de cambio) y mensual (IPC, tasa de referencia, PBI)",
-    "primary_key": ["serie", "fecha"],
-    "min_records": 20000,
+    "update_frequency": "Según cada serie (diaria a anual)",
+    "primary_key": ["code"],
+    "min_records": 15000,
     "columns": [
-      {"name": "serie", "type": "string", "description": "Código de la serie en BCRPData (p. ej. PD04638PD)"},
-      {"name": "nombre", "type": "string", "description": "Nombre legible de la serie"},
-      {"name": "frecuencia", "type": "string", "description": "'diaria' o 'mensual'"},
-      {"name": "unidad", "type": "string", "description": "Unidad del valor (S/ por US$, %, índice)"},
-      {"name": "fecha", "type": "date", "description": "Fecha del dato. En series mensuales es el primer día del mes"},
-      {"name": "valor", "type": "float64", "description": "Valor publicado. Los días sin dato ('n.d.') se omiten"}
+      {"name": "code", "type": "string", "description": "Código de la serie en BCRPData (p. ej. PD04638PD)"},
+      {"name": "name", "type": "string", "description": "Nombre de la serie, tal como lo publica el BCRP"},
+      {"name": "category", "type": "string", "description": "Categoría (p. ej. Tipo de cambio, Empresas bancarias)"},
+      {"name": "series_group", "type": "string", "description": "Grupo de series dentro de la categoría"},
+      {"name": "unit", "type": "string", "description": "Unidad de medida, cuando el BCRP la declara"},
+      {"name": "frequency", "type": "string", "description": "daily, monthly, quarterly o annual"},
+      {"name": "table_name", "type": "string", "description": "Tabla con los datos de la serie: bcrp_daily, bcrp_monthly, bcrp_quarterly o bcrp_annual"},
+      {"name": "first_date", "type": "date", "description": "Primera fecha con dato (vacía si la API no devolvió datos)"},
+      {"name": "last_date", "type": "date", "description": "Última fecha con dato"},
+      {"name": "observations", "type": "int64", "description": "Cantidad de datos de la serie"},
+      {"name": "is_active", "type": "bool", "description": "true si el último dato es reciente para su frecuencia (diaria 60 días, mensual 400, trimestral 550, anual 900)"},
+      {"name": "geography", "type": "string", "description": "PE (Perú), RE (región) u otro valor del BCRP"},
+      {"name": "source", "type": "string", "description": "Fuente original declarada por el BCRP"},
+      {"name": "publication_group", "type": "string", "description": "Grupo de publicación del BCRP"},
+      {"name": "publishing_area", "type": "string", "description": "Área del BCRP que publica la serie"},
+      {"name": "created_on", "type": "date", "description": "Fecha de creación de la serie en BCRPData"},
+      {"name": "updated_on", "type": "date", "description": "Fecha de la última actualización según el BCRP"}
     ],
     "reuse_policy": {
       "status": "open-attribution",
@@ -24,19 +35,107 @@
       "redistribution_ok": true
     }
   },
-  "macro_uit": {
+  "bcrp_daily": {
+    "description": "Datos de las series diarias del BCRP (tipo de cambio, tasas, bolsa…). Una fila por serie y fecha. Nombres y unidades en bcrp_catalog.",
+    "module": "macro",
+    "extractor": "bcrp_data",
+    "source_name": "Banco Central de Reserva del Perú (BCRPData)",
+    "source_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/",
+    "update_frequency": "Diaria",
+    "primary_key": ["code", "date"],
+    "min_records": 200000,
+    "columns": [
+      {"name": "code", "type": "string", "description": "Código de la serie (ver bcrp_catalog)"},
+      {"name": "date", "type": "date", "description": "Fecha del dato"},
+      {"name": "value", "type": "float64", "description": "Valor publicado. Los días sin dato ('n.d.') se omiten"}
+    ],
+    "reuse_policy": {
+      "status": "open-attribution",
+      "license": "Condiciones de uso de BCRPData: reproducción libre citando la fuente",
+      "license_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso",
+      "attribution_required": true,
+      "redistribution_ok": true
+    }
+  },
+  "bcrp_monthly": {
+    "description": "Datos de las series mensuales del BCRP (inflación, tasa de referencia, PBI, crédito, balanza comercial…). La fecha es el primer día del mes. Nombres y unidades en bcrp_catalog.",
+    "module": "macro",
+    "extractor": "bcrp_data",
+    "source_name": "Banco Central de Reserva del Perú (BCRPData)",
+    "source_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/",
+    "update_frequency": "Mensual",
+    "primary_key": ["code", "date"],
+    "min_records": 500000,
+    "columns": [
+      {"name": "code", "type": "string", "description": "Código de la serie (ver bcrp_catalog)"},
+      {"name": "date", "type": "date", "description": "Primer día del mes del dato"},
+      {"name": "value", "type": "float64", "description": "Valor publicado. Los meses sin dato ('n.d.') se omiten"}
+    ],
+    "reuse_policy": {
+      "status": "open-attribution",
+      "license": "Condiciones de uso de BCRPData: reproducción libre citando la fuente",
+      "license_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso",
+      "attribution_required": true,
+      "redistribution_ok": true
+    }
+  },
+  "bcrp_quarterly": {
+    "description": "Datos de las series trimestrales del BCRP (PBI por componentes, balanza de pagos…). La fecha es el primer día del trimestre. Nombres y unidades en bcrp_catalog.",
+    "module": "macro",
+    "extractor": "bcrp_data",
+    "source_name": "Banco Central de Reserva del Perú (BCRPData)",
+    "source_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/",
+    "update_frequency": "Trimestral",
+    "primary_key": ["code", "date"],
+    "min_records": 50000,
+    "columns": [
+      {"name": "code", "type": "string", "description": "Código de la serie (ver bcrp_catalog)"},
+      {"name": "date", "type": "date", "description": "Primer día del trimestre del dato"},
+      {"name": "value", "type": "float64", "description": "Valor publicado"}
+    ],
+    "reuse_policy": {
+      "status": "open-attribution",
+      "license": "Condiciones de uso de BCRPData: reproducción libre citando la fuente",
+      "license_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso",
+      "attribution_required": true,
+      "redistribution_ok": true
+    }
+  },
+  "bcrp_annual": {
+    "description": "Datos de las series anuales del BCRP, incluidas series históricas desde el siglo XIX. La fecha es el 1 de enero del año. Nombres y unidades en bcrp_catalog.",
+    "module": "macro",
+    "extractor": "bcrp_data",
+    "source_name": "Banco Central de Reserva del Perú (BCRPData)",
+    "source_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/",
+    "update_frequency": "Anual",
+    "primary_key": ["code", "date"],
+    "min_records": 50000,
+    "columns": [
+      {"name": "code", "type": "string", "description": "Código de la serie (ver bcrp_catalog)"},
+      {"name": "date", "type": "date", "description": "1 de enero del año del dato"},
+      {"name": "value", "type": "float64", "description": "Valor publicado"}
+    ],
+    "reuse_policy": {
+      "status": "open-attribution",
+      "license": "Condiciones de uso de BCRPData: reproducción libre citando la fuente",
+      "license_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso",
+      "attribution_required": true,
+      "redistribution_ok": true
+    }
+  },
+  "sunat_uit": {
     "description": "Valor histórico de la Unidad Impositiva Tributaria (UIT) por año, con el Decreto Supremo que lo fija.",
     "module": "macro",
     "extractor": "uit",
     "source_name": "SUNAT (valores fijados por Decreto Supremo del MEF)",
     "source_url": "https://www.sunat.gob.pe/indicestasas/uit.html",
     "update_frequency": "Anual (diciembre)",
-    "primary_key": ["anio"],
+    "primary_key": ["year"],
     "min_records": 25,
     "columns": [
-      {"name": "anio", "type": "int16", "description": "Año de vigencia"},
-      {"name": "valor", "type": "int32", "description": "Valor de la UIT en soles (S/)"},
-      {"name": "base_legal", "type": "string", "description": "Decreto Supremo que fija el valor (p. ej. D.S. N° 301-2025-EF)"}
+      {"name": "year", "type": "int16", "description": "Año de vigencia"},
+      {"name": "value", "type": "int32", "description": "Valor de la UIT en soles (S/)"},
+      {"name": "legal_basis", "type": "string", "description": "Decreto Supremo que fija el valor (p. ej. D.S. N° 301-2025-EF)"}
     ],
     "reuse_policy": {
       "status": "open-attribution",

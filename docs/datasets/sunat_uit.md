@@ -1,4 +1,4 @@
-# `macro_uit`: Unidad Impositiva Tributaria
+# `sunat_uit`: Unidad Impositiva Tributaria
 
 **Fuente:** tabla oficial de SUNAT (`https://www.sunat.gob.pe/indicestasas/uit.html`).
 Cada valor lo fija un Decreto Supremo del MEF.
@@ -6,13 +6,13 @@ Cada valor lo fija un Decreto Supremo del MEF.
 **Actualización:** anual (el D.S. sale en diciembre para el año siguiente).
 **Cobertura:** 1994 en adelante.
 
-Clave primaria: `anio`.
+Clave primaria: `year`.
 
 | Columna | Tipo | Descripción |
 |---|---|---|
-| `anio` | int16 | Año de vigencia |
-| `valor` | int32 | Valor en soles (S/) |
-| `base_legal` | string | Decreto Supremo, p. ej. `D.S. N° 301-2025-EF` |
+| `year` | int16 | Año de vigencia |
+| `value` | int32 | Valor en soles (S/) |
+| `legal_basis` | string | Decreto Supremo, p. ej. `D.S. N° 301-2025-EF` |
 
 ## Decisiones
 
@@ -20,8 +20,6 @@ Clave primaria: `anio`.
   1992 regía la URT, no la UIT.
 - **1996 tuvo dos valores** (cambió en febrero). Se usa S/ 2,200 (D.S. N°
   012-96-EF), que estuvo vigente casi todo el año.
-- La página de SUNAT mezcla encodings y formatos de número (`5,500` y
-  `3.100`). El extractor lee solo los dígitos.
 
 ## Validaciones antes de publicar
 
@@ -37,5 +35,5 @@ import peruopen as pe
 
 pe.macro.uit()  # año actual -> 5500
 pe.macro.uit(2020)  # -> 4300
-pe.macro.uit_historica().df()
+pe.macro.uit_history().df()
 ```

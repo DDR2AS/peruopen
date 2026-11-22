@@ -2,9 +2,10 @@
 
     import peruopen as pe
 
-    pe.query("SELECT * FROM macro_uit ORDER BY anio DESC LIMIT 5").df()
-    pe.macro.tipo_cambio(desde="2026-01-01").pl()
     pe.list_datasets()
+    pe.macro.exchange_rate(start="2026-01-01").df()
+    pe.macro.search("morosidad bancaria").df()
+    pe.query("SELECT * FROM sunat_uit ORDER BY year DESC LIMIT 5").df()
 
 La primera vez descarga los datos que uses y los guarda en caché. Después
 revisa como máximo una vez al día si hay una versión nueva.

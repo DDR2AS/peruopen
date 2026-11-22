@@ -21,24 +21,24 @@ def pe(tmp_path: Path, uit_rows: list[tuple[int, int, str]]) -> PeruOpen:
 
 
 def test_select_works_and_is_limited(pe: PeruOpen) -> None:
-    result = pe.query_readonly("SELECT anio, valor FROM macro_uit ORDER BY anio", limit=1)
-    assert result["columns"] == ["anio", "valor"]
-    assert result["rows"] == [{"anio": 2025, "valor": 5350}]
+    result = pe.query_readonly("SELECT year, value FROM sunat_uit ORDER BY year", limit=1)
+    assert result["columns"] == ["year", "value"]
+    assert result["rows"] == [{"year": 2025, "value": 5350}]
     assert result["truncated"] is True
-    assert result["datasets"] == {"macro_uit": result["datasets"]["macro_uit"]}
+    assert result["datasets"] == {"sunat_uit": result["datasets"]["sunat_uit"]}
 
 
 def test_with_clause_is_allowed(pe: PeruOpen) -> None:
-    sql = "WITH u AS (SELECT * FROM macro_uit) SELECT max(valor) AS m FROM u;"
+    sql = "WITH u AS (SELECT * FROM sunat_uit) SELECT max(value) AS m FROM u;"
     assert pe.query_readonly(sql)["rows"] == [{"m": 5500}]
 
 
 @pytest.mark.parametrize(
     "sql",
     [
-        "DROP VIEW macro_uit",
+        "DROP VIEW sunat_uit",
         "CREATE TABLE x AS SELECT 1",
-        "INSERT INTO macro_uit VALUES (1, 1, 'x')",
+        "INSERT INTO sunat_uit VALUES (1, 1, 'x')",
         "COPY (SELECT 1) TO 'x.csv'",
         "SET enable_external_access = true",
         "ATTACH 'otra.db'",
@@ -67,8 +67,8 @@ def test_mcp_server_tools(pe: PeruOpen) -> None:
     async def run() -> None:
         async with fastmcp.Client(build_server(pe)) as client:
             tools = {t.name for t in await client.list_tools()}
-            assert tools == {"list_datasets", "describe_dataset", "query"}
-            result = await client.call_tool("query", {"sql": "SELECT count(*) AS n FROM macro_uit"})
+            assert tools == {"list_datasets", "describe_dataset", "search_series", "query"}
+            result = await client.call_tool("query", {"sql": "SELECT count(*) AS n FROM sunat_uit"})
             assert result.data["rows"] == [{"n": 2}]
 
     asyncio.run(run())

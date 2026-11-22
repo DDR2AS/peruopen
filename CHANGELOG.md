@@ -4,6 +4,41 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 Los **datos** se actualizan aparte (snapshots en la vitrina) y no generan
 versiones nuevas del paquete.
 
+## [0.1.0a3] - 2026-11-22
+
+### Agregado
+
+- **Todas las series del BCRP** (~17 000), no solo 10:
+  - `bcrp_catalog`: catálogo con nombre, categoría, unidad, frecuencia, primera y
+    última fecha con dato, y si la serie está activa;
+  - `bcrp_daily`, `bcrp_monthly`, `bcrp_quarterly`, `bcrp_annual`: los datos
+    (`code`, `date`, `value`), separados por frecuencia para que cada consulta
+    descargue solo lo que necesita.
+- `pe.macro.search("palabras")`: busca series sin importar tildes ni mayúsculas.
+- `pe.macro.series(code)`: cualquier serie por su código.
+- `pe.macro.policy_rate()` y `pe.macro.gdp_growth()`.
+- Tool MCP `search_series` para que los agentes encuentren el código de una serie.
+
+### Cambiado (cambios de API)
+
+- **Nombres de código en inglés.** La documentación sigue en español y los
+  valores quedan como los publica el Estado.
+
+  | Antes | Ahora |
+  |---|---|
+  | `pe.macro.tipo_cambio(desde, hasta, tipo="interbancario", lado="venta")` | `pe.macro.exchange_rate(start, end, kind="interbank", side="sell")` |
+  | `tipo="sbs"`, `lado="compra"` | `kind="sbs"`, `side="buy"` |
+  | `pe.macro.inflacion(desde, hasta, periodo="12_meses")` | `pe.macro.inflation(start, end, period="12m")` (o `"monthly"`) |
+  | `pe.macro.serie(codigo, …)` | `pe.macro.series(code, …)` |
+  | `pe.macro.uit(anio)` / `uit_historica()` | `pe.macro.uit(year)` / `uit_history()` |
+  | parámetro `pe=` | `conn=` |
+  | `build_server(pe=…)` | `build_server(conn=…)` |
+
+- **Datasets renombrados:**
+  - `macro_series` (serie, nombre, frecuencia, unidad, fecha, valor) →
+    `bcrp_daily` / `bcrp_monthly` (`code`, `date`, `value`) + `bcrp_catalog`;
+  - `macro_uit` (anio, valor, base_legal) → `sunat_uit` (`year`, `value`, `legal_basis`).
+
 ## [0.1.0a2] - 2026-11-22
 
 ### Cambiado

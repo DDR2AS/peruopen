@@ -9,6 +9,7 @@ Reglas:
 - Si un dataset no cambió (mismo sha256), no se vuelve a subir: el manifest
   nuevo apunta al archivo de la snapshot anterior.
 - Si un dataset falló en el build, se conserva su versión anterior.
+- Si un dataset ya no está en el registro, sale del manifest.
 - `v1/manifest.json` se reemplaza al final, después de subir y verificar todo,
   para que nadie vea nunca un manifest que apunte a archivos incompletos.
 """
@@ -25,6 +26,7 @@ from typing import Any, Protocol
 
 from .build import CATALOG_NAME
 from .common import NORMALIZED_DIR
+from .registry import load_registry
 
 log = logging.getLogger("peruopen.pipelines")
 
@@ -170,8 +172,10 @@ def publish(
     *,
     allow_fallback: bool = False,
     now: datetime | None = None,
+    registry_names: set[str] | None = None,
 ) -> dict[str, Any]:
     now = now or datetime.now(UTC)
+    registered = registry_names if registry_names is not None else set(load_registry())
     catalog_path = normalized_dir / CATALOG_NAME
     if not catalog_path.exists():
         raise SystemExit(f"No existe {catalog_path}: corre primero `python -m pipelines build`")
@@ -202,6 +206,11 @@ def publish(
         log.info("  ↑ %s (%s bytes)", name, entry["bytes"])
 
     for name, prev in previous["datasets"].items():
+        if name in datasets:
+            continue
+        if name not in registered:
+            log.warning("  - %s ya no está en el registro: sale del manifest", name)
+            continue
         if name not in datasets:
             datasets[name] = prev
             reason = catalog.get("failed", {}).get(name, "no se construyó en este build")

@@ -11,6 +11,7 @@ from . import bcrp, uit
 Extractor = Callable[[DatasetSpec, str], ExtractionResult]
 
 EXTRACTORS: dict[str, Extractor] = {
-    "bcrp": bcrp.extract,
+    "bcrp_catalog": bcrp.extract_catalog,
+    "bcrp_data": bcrp.extract_data,
     "uit": uit.extract,
 }

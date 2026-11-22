@@ -14,12 +14,13 @@ repo, sin saber cómo funciona por dentro y sin configurar Cloudflare ni GitHub.
 - **Python 3.11 o superior.** Para comprobarlo: `python --version`.
 - Internet la primera vez (para descargar los datos). Después funciona sin conexión.
 
-## ¿Qué datos hay hoy? (versión 0.1.0a1)
+## ¿Qué datos hay hoy?
 
 | Tabla | Contenido | Fuente |
 |---|---|---|
-| `macro_series` | Tipo de cambio (interbancario y SBS), inflación, tasa de referencia y PBI, desde 2000 | BCRP |
-| `macro_uit` | Valor de la UIT por año desde 1994, con su Decreto Supremo | SUNAT |
+| `bcrp_catalog` | Catálogo de todas las series del BCRP (~17 000): nombre, unidad, frecuencia | BCRP |
+| `bcrp_daily`, `bcrp_monthly`, `bcrp_quarterly`, `bcrp_annual` | Datos de todas esas series (tipo de cambio, inflación, tasas, PBI…) | BCRP |
+| `sunat_uit` | Valor de la UIT por año desde 1994, con su Decreto Supremo | SUNAT |
 
 El detalle de cada columna está en [docs/datasets/](../datasets/).
 

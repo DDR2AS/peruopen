@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -10,41 +12,101 @@ import pytest
 from pipelines.common import sha256_file
 
 
-def make_catalog(out_dir: Path, uit_rows: list[tuple[int, int, str]]) -> None:
-    """Escribe un build mínimo (sin red) para probar la vitrina y la librería."""
-    out_dir.mkdir(parents=True, exist_ok=True)
-    table = pa.table(
-        {
-            "anio": pa.array([r[0] for r in uit_rows], pa.int16()),
-            "valor": pa.array([r[1] for r in uit_rows], pa.int32()),
-            "base_legal": [r[2] for r in uit_rows],
-        }
-    )
-    path = out_dir / "macro_uit.parquet"
-    pq.write_table(table, path, compression="zstd")
-    entry = {
+def _entry(path: Path, table: pa.Table, description: str, primary_key: list[str]) -> dict[str, Any]:
+    return {
         "file": path.name,
         "sha256": sha256_file(path),
         "bytes": path.stat().st_size,
         "record_count": table.num_rows,
-        "description": "UIT de prueba",
+        "description": description,
         "module": "macro",
-        "columns": [
-            {"name": "anio", "type": "int16", "description": ""},
-            {"name": "valor", "type": "int32", "description": ""},
-            {"name": "base_legal", "type": "string", "description": ""},
-        ],
-        "primary_key": ["anio"],
-        "source_name": "SUNAT",
-        "source_url": "https://www.sunat.gob.pe/indicestasas/uit.html",
+        "columns": [{"name": f.name, "type": str(f.type), "description": ""} for f in table.schema],
+        "primary_key": primary_key,
+        "source_name": "prueba",
+        "source_url": "https://example.org",
         "source_mode": "live",
         "source_last_modified": None,
         "retrieved_at": "2026-11-22T00:00:00+00:00",
-        "update_frequency": "Anual",
-        "reuse_policy": {"license": "Dato normativo público"},
+        "update_frequency": "",
+        "reuse_policy": {"license": "prueba"},
         "notes": [],
     }
-    catalog = {"run_id": "test", "built_at": "", "datasets": {"macro_uit": entry}, "failed": {}}
+
+
+def _write(out_dir: Path, name: str, table: pa.Table) -> Path:
+    path = out_dir / f"{name}.parquet"
+    pq.write_table(table, path, compression="zstd")
+    return path
+
+
+def bcrp_tables() -> dict[str, pa.Table]:
+    """Un BCRP en miniatura: 2 series diarias y 1 mensual, con su catálogo."""
+    catalog = pa.table(
+        {
+            "code": ["PD04637PD", "PD04638PD", "PN01273PM", "PN07746EM"],
+            "name": [
+                "Tipo de cambio - TC Interbancario (S/ por US$) - Compra",
+                "Tipo de cambio - TC Interbancario (S/ por US$) - Venta",
+                "Índice de precios Lima Metropolitana (var% 12 meses) - IPC",
+                "Cartera atrasada neta / Colocaciones netas (%) - Empresas bancarias",
+            ],
+            "category": ["Tipo de cambio", "Tipo de cambio", "Inflación", "Empresas bancarias"],
+            "series_group": [
+                "Tipo de cambio",
+                "Tipo de cambio",
+                "Índice de precios",
+                "Indicadores",
+            ],
+            "unit": ["S/ por US$", "S/ por US$", "%", "%"],
+            "frequency": ["daily", "daily", "monthly", "monthly"],
+            "table_name": ["bcrp_daily", "bcrp_daily", "bcrp_monthly", "bcrp_monthly"],
+            "last_date": [
+                date(2026, 11, 19),
+                date(2026, 11, 19),
+                date(2026, 10, 1),
+                date(2026, 9, 1),
+            ],
+            "observations": pa.array([2, 2, 2, 0], pa.int64()),
+            "is_active": [True, True, True, True],
+        }
+    )
+    daily = pa.table(
+        {
+            "code": ["PD04637PD", "PD04637PD", "PD04638PD", "PD04638PD"],
+            "date": [date(2026, 11, 18), date(2026, 11, 19)] * 2,
+            "value": [3.430, 3.439, 3.432, 3.441],
+        }
+    )
+    monthly = pa.table(
+        {
+            "code": ["PN01273PM", "PN01273PM"],
+            "date": [date(2026, 9, 1), date(2026, 10, 1)],
+            "value": [4.55, 5.25],
+        }
+    )
+    return {"bcrp_catalog": catalog, "bcrp_daily": daily, "bcrp_monthly": monthly}
+
+
+def make_catalog(
+    out_dir: Path, uit_rows: list[tuple[int, int, str]], *, with_bcrp: bool = False
+) -> None:
+    """Escribe un build mínimo (sin red) para probar la vitrina y la librería."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    uit = pa.table(
+        {
+            "year": pa.array([r[0] for r in uit_rows], pa.int16()),
+            "value": pa.array([r[1] for r in uit_rows], pa.int32()),
+            "legal_basis": [r[2] for r in uit_rows],
+        }
+    )
+    datasets = {
+        "sunat_uit": _entry(_write(out_dir, "sunat_uit", uit), uit, "UIT de prueba", ["year"])
+    }
+    if with_bcrp:
+        for name, table in bcrp_tables().items():
+            key = ["code"] if name == "bcrp_catalog" else ["code", "date"]
+            datasets[name] = _entry(_write(out_dir, name, table), table, f"{name} de prueba", key)
+    catalog = {"run_id": "test", "built_at": "", "datasets": datasets, "failed": {}}
     (out_dir / "catalog.json").write_text(json.dumps(catalog), encoding="utf-8")
 
 

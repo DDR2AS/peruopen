@@ -8,12 +8,13 @@ citando la fuente.
 
 **MCP** (*Model Context Protocol*) es la forma estándar de darle herramientas a
 un asistente de IA. peruopen incluye un **servidor MCP**: un pequeño programa que
-Claude Desktop arranca en tu computadora y que le ofrece tres herramientas:
+Claude Desktop arranca en tu computadora y que le ofrece cuatro herramientas:
 
 | Herramienta | Qué hace |
 |---|---|
 | `list_datasets` | Le dice a Claude qué datos hay |
 | `describe_dataset` | Le explica las columnas, la fuente oficial y la fecha del dato |
+| `search_series` | Busca entre las ~17 000 series del BCRP la que corresponde a tu pregunta |
 | `query` | Ejecuta una consulta SQL **de solo lectura** y devuelve el resultado |
 
 Es seguro: el servidor solo acepta consultas `SELECT`, no puede leer otros
@@ -154,6 +155,8 @@ Después ábrelo de nuevo.
 > Compara la inflación anual de Lima con la tasa de referencia del BCRP en los últimos 24 meses.
 
 > ¿Cuántos dólares son 4 UIT al tipo de cambio más reciente?
+
+> ¿Cómo ha evolucionado la morosidad de la banca en los últimos dos años?
 
 La primera vez Claude te pedirá **permiso** para usar las herramientas de peruopen: acéptalo.
 

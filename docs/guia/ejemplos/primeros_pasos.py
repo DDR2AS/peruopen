@@ -17,38 +17,42 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")  # tildes en la consola de Windows
 
 
-def titulo(texto: str) -> None:
-    print(f"\n=== {texto} ===")
+def title(text: str) -> None:
+    print(f"\n=== {text} ===")
 
 
-titulo(f"peruopen {pe.__version__}")
+title(f"peruopen {pe.__version__}")
 for d in pe.list_datasets():
     print(f"- {d['dataset']}: {d['record_count']:,} filas | fuente: {d['source_name']}")
 
-titulo("UIT")
-print(f"UIT {2026}: S/ {pe.macro.uit(2026):,}")
-print(f"UIT {2015}: S/ {pe.macro.uit(2015):,}")
+title("UIT")
+print(f"UIT 2026: S/ {pe.macro.uit(2026):,}")
+print(f"UIT 2015: S/ {pe.macro.uit(2015):,}")
 
-titulo("Tipo de cambio interbancario (venta), últimos 5 días")
-for fecha, valor in pe.macro.tipo_cambio(desde="2026-01-01").fetchall()[-5:]:
-    print(f"{fecha}  S/ {valor:.3f}")
+title("Tipo de cambio interbancario (venta), últimos 5 días")
+for day, value in pe.macro.exchange_rate(start="2026-01-01").fetchall()[-5:]:
+    print(f"{day}  S/ {value:.3f}")
 
-titulo("Tipo de cambio promedio por año")
-for anio, promedio in pe.query(
+title("Tipo de cambio promedio por año")
+for year, avg in pe.query(
     """
-    SELECT year(fecha), avg(valor)
-    FROM macro_series
-    WHERE serie = 'PD04638PD' AND fecha >= '2020-01-01'
+    SELECT year(date), avg(value)
+    FROM bcrp_daily
+    WHERE code = 'PD04638PD' AND date >= DATE '2020-01-01'
     GROUP BY 1 ORDER BY 1
     """
 ).fetchall():
-    print(f"{anio}  S/ {promedio:.3f}")
+    print(f"{year}  S/ {avg:.3f}")
 
-titulo("Inflación de Lima (variación 12 meses), últimos 6 meses")
-for fecha, valor in pe.macro.inflacion().fetchall()[-6:]:
-    print(f"{fecha:%Y-%m}  {valor:5.2f} %")
+title("Inflación de Lima (variación 12 meses), últimos 6 meses")
+for month, value in pe.macro.inflation().fetchall()[-6:]:
+    print(f"{month:%Y-%m}  {value:5.2f} %")
 
-titulo("Estado de los datos")
-estado = pe.status()
-print(f"Snapshot: {estado['snapshot']}")
-print(f"Caché en: {estado['cache_dir']}")
+title("Buscar series del BCRP: 'morosidad'")
+for code, group, name, *_ in pe.macro.search("morosidad", limit=5).fetchall():
+    print(f"{code}  {group} - {name}"[:110])
+
+title("Estado de los datos")
+status = pe.status()
+print(f"Snapshot: {status['snapshot']}")
+print(f"Caché en: {status['cache_dir']}")
