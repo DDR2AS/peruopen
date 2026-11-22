@@ -36,9 +36,9 @@ def _view_sql(name: str, path: Path) -> str:
 class PeruOpen:
     """Conexión a los datos de peruopen.
 
-    po = PeruOpen()                         # última snapshot
-    po = PeruOpen(snapshot="2026-11-22")    # fija una versión (reproducible)
-    po.query("SELECT * FROM macro_uit").df()
+    conn = PeruOpen()                         # última snapshot
+    conn = PeruOpen(snapshot="2026-11-22")    # fija una versión (reproducible)
+    conn.query("SELECT * FROM macro_uit").df()
     """
 
     def __init__(

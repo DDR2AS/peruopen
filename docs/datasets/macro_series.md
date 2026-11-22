@@ -42,12 +42,12 @@ Formato largo: una fila por serie y fecha. Clave primaria: `(serie, fecha)`.
 ## Ejemplos
 
 ```python
-import peruopen as po
+import peruopen as pe
 
-po.macro.tipo_cambio(desde="2026-01-01").df()  # interbancario venta
-po.macro.tipo_cambio(tipo="sbs", lado="compra").pl()
-po.macro.inflacion(periodo="12_meses", desde="2025-01-01").df()
-po.query("""
+pe.macro.tipo_cambio(desde="2026-01-01").df()  # interbancario venta
+pe.macro.tipo_cambio(tipo="sbs", lado="compra").pl()
+pe.macro.inflacion(periodo="12_meses", desde="2025-01-01").df()
+pe.query("""
     SELECT year(fecha) AS anio, avg(valor) AS tc_promedio
     FROM macro_series WHERE serie = 'PD04638PD'
     GROUP BY 1 ORDER BY 1

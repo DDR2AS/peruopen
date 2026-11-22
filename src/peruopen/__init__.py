@@ -1,10 +1,10 @@
 """peruopen: datos públicos oficiales del Perú, curados en Parquet.
 
-    import peruopen as po
+    import peruopen as pe
 
-    po.query("SELECT * FROM macro_uit ORDER BY anio DESC LIMIT 5").df()
-    po.macro.tipo_cambio(desde="2026-01-01").pl()
-    po.list_datasets()
+    pe.query("SELECT * FROM macro_uit ORDER BY anio DESC LIMIT 5").df()
+    pe.macro.tipo_cambio(desde="2026-01-01").pl()
+    pe.list_datasets()
 
 La primera vez descarga los datos que uses y los guarda en caché. Después
 revisa como máximo una vez al día si hay una versión nueva.
@@ -37,7 +37,7 @@ from .exceptions import (
 _default: PeruOpen | None = None
 
 
-def _po() -> PeruOpen:
+def _pe() -> PeruOpen:
     global _default
     if _default is None:
         _default = PeruOpen()
@@ -57,33 +57,33 @@ def connect(
 
 def query(sql: str, params: list[Any] | dict[str, Any] | None = None) -> duckdb.DuckDBPyRelation:
     """Ejecuta SQL sobre los datasets. Devuelve una relación: .df(), .pl(), .arrow()."""
-    return _po().query(sql, params)
+    return _pe().query(sql, params)
 
 
 def table(name: str) -> duckdb.DuckDBPyRelation:
-    return _po().table(name)
+    return _pe().table(name)
 
 
 def list_datasets() -> list[dict[str, Any]]:
-    return _po().list_datasets()
+    return _pe().list_datasets()
 
 
 def describe(name: str) -> dict[str, Any]:
-    return _po().describe(name)
+    return _pe().describe(name)
 
 
 def update(names: list[str] | None = None) -> dict[str, str]:
     """Revisa ahora si hay datos nuevos (sin esperar las 24 h) y los descarga."""
-    return _po().update(names)
+    return _pe().update(names)
 
 
 def status() -> dict[str, Any]:
     """Qué snapshot tienes y qué datasets están en caché."""
-    return _po().status()
+    return _pe().status()
 
 
 def clear_cache() -> None:
-    _po().clear_cache()
+    _pe().clear_cache()
 
 
 from .datasets import macro  # noqa: E402

@@ -27,14 +27,14 @@ Cita siempre la fuente (source_name) y la fecha del dato (retrieved_at) al respo
 """
 
 
-def build_server(po: PeruOpen | None = None) -> Any:
+def build_server(pe: PeruOpen | None = None) -> Any:
     try:
         from fastmcp import FastMCP
         from fastmcp.exceptions import ToolError
     except ImportError as exc:  # pragma: no cover
         raise SystemExit('El servidor MCP necesita el extra: pip install "peruopen[mcp]"') from exc
 
-    conn = po or PeruOpen()
+    conn = pe or PeruOpen()
     mcp = FastMCP("peruopen", instructions=INSTRUCTIONS)
 
     def _call(fn: Callable[[], Any]) -> Any:

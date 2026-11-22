@@ -33,9 +33,9 @@ Clave primaria: `anio`.
 ## Ejemplos
 
 ```python
-import peruopen as po
+import peruopen as pe
 
-po.macro.uit()  # año actual -> 5500
-po.macro.uit(2020)  # -> 4300
-po.macro.uit_historica().df()
+pe.macro.uit()  # año actual -> 5500
+pe.macro.uit(2020)  # -> 4300
+pe.macro.uit_historica().df()
 ```

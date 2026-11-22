@@ -38,10 +38,10 @@ def test_publish_writes_manifest_and_snapshot(vitrina: Path) -> None:
 
 
 def test_query_downloads_and_caches(vitrina: Path, tmp_path: Path) -> None:
-    po = connect(vitrina, tmp_path)
-    assert po.query("SELECT valor FROM macro_uit WHERE anio = 2026").fetchone() == (5500,)
-    assert peruopen.macro.uit(2025, po=po) == 5350
-    status = po.status()
+    pe = connect(vitrina, tmp_path)
+    assert pe.query("SELECT valor FROM macro_uit WHERE anio = 2026").fetchone() == (5500,)
+    assert peruopen.macro.uit(2025, pe=pe) == 5350
+    status = pe.status()
     assert status["snapshot"] == "2026-11-23"
     assert status["datasets"][0]["cached"] is True
 
@@ -62,17 +62,17 @@ def test_same_day_publish_gets_new_snapshot_id(vitrina: Path, tmp_path: Path) ->
 def test_new_data_is_picked_up_after_update(
     vitrina: Path, tmp_path: Path, uit_rows: list[tuple[int, int, str]]
 ) -> None:
-    po = connect(vitrina, tmp_path)
-    assert po.query("SELECT count(*) FROM macro_uit").fetchone() == (2,)
+    pe = connect(vitrina, tmp_path)
+    assert pe.query("SELECT count(*) FROM macro_uit").fetchone() == (2,)
 
     make_catalog(tmp_path / "normalized", [*uit_rows, (2027, 5700, "D.S. N° 999-2026-EF")])
     publish(LocalTarget(vitrina), tmp_path / "normalized", now=T2)
 
     # Dentro de las 24 h la librería no vuelve a mirar la vitrina…
-    assert po.query("SELECT count(*) FROM macro_uit").fetchone() == (2,)
+    assert pe.query("SELECT count(*) FROM macro_uit").fetchone() == (2,)
     # …salvo que se pida explícitamente.
-    assert po.update() == {"macro_uit": "2026-11-30"}
-    assert po.query("SELECT count(*) FROM macro_uit").fetchone() == (3,)
+    assert pe.update() == {"macro_uit": "2026-11-30"}
+    assert pe.query("SELECT count(*) FROM macro_uit").fetchone() == (3,)
 
 
 def test_snapshot_pinning_is_reproducible(

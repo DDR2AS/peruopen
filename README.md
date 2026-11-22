@@ -21,14 +21,21 @@ cacheados en tu máquina.
 
 ## Uso
 
+```bash
+pip install peruopen
+```
+
+> 📘 **¿Primera vez?** Sigue la [guía paso a paso](https://github.com/DDR2AS/peruopen/blob/main/docs/guia/README.md):
+> instalar, consultar los datos y conectar peruopen a Claude (MCP).
+
 ```python
-import peruopen as po
+import peruopen as pe
 
-po.list_datasets()  # qué hay
-po.macro.uit(2026)  # -> 5500
-po.macro.tipo_cambio(desde="2026-01-01").df()  # pandas (o .pl() para polars)
+pe.list_datasets()  # qué hay
+pe.macro.uit(2026)  # -> 5500
+pe.macro.tipo_cambio(desde="2026-01-01").df()  # pandas (o .pl() para polars)
 
-po.query("""
+pe.query("""
     SELECT year(fecha) AS anio, round(avg(valor), 3) AS tc_promedio
     FROM macro_series WHERE serie = 'PD04638PD'
     GROUP BY 1 ORDER BY 1
@@ -41,11 +48,11 @@ nada para actualizar.
 
 | Necesito… | Cómo |
 |---|---|
-| Forzar la revisión de datos nuevos | `po.update()` |
-| Ver qué versión tengo | `po.status()` |
+| Forzar la revisión de datos nuevos | `pe.update()` |
+| Ver qué versión tengo | `pe.status()` |
 | Trabajar sin internet | `PERUOPEN_OFFLINE=1` |
-| Resultados reproducibles | `po.connect(snapshot="2026-11-22")` |
-| Borrar la caché | `po.clear_cache()` |
+| Resultados reproducibles | `pe.connect(snapshot="2026-11-22")` |
+| Borrar la caché | `pe.clear_cache()` |
 
 ### Para agentes de IA (MCP)
 
@@ -61,7 +68,7 @@ lectura, sin acceso a otros archivos, con límite de filas y timeout).
 ```bash
 pip install -e ".[pipeline,mcp]"
 python -m pipelines run --target local --dir data/vitrina   # cocina + vitrina local
-PERUOPEN_BASE_URL="$PWD/data/vitrina" python -c "import peruopen as po; print(po.macro.uit())"
+PERUOPEN_BASE_URL="$PWD/data/vitrina" python -c "import peruopen as pe; print(pe.macro.uit())"
 ```
 
 ## Datasets planificados (v0.1)

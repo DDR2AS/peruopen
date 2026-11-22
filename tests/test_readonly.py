@@ -14,23 +14,23 @@ from tests.conftest import make_catalog
 
 
 @pytest.fixture
-def po(tmp_path: Path, uit_rows: list[tuple[int, int, str]]) -> PeruOpen:
+def pe(tmp_path: Path, uit_rows: list[tuple[int, int, str]]) -> PeruOpen:
     make_catalog(tmp_path / "normalized", uit_rows)
     publish(LocalTarget(tmp_path / "vitrina"), tmp_path / "normalized")
     return peruopen.connect(base_url=str(tmp_path / "vitrina"), cache_dir=str(tmp_path / "cache"))
 
 
-def test_select_works_and_is_limited(po: PeruOpen) -> None:
-    result = po.query_readonly("SELECT anio, valor FROM macro_uit ORDER BY anio", limit=1)
+def test_select_works_and_is_limited(pe: PeruOpen) -> None:
+    result = pe.query_readonly("SELECT anio, valor FROM macro_uit ORDER BY anio", limit=1)
     assert result["columns"] == ["anio", "valor"]
     assert result["rows"] == [{"anio": 2025, "valor": 5350}]
     assert result["truncated"] is True
     assert result["datasets"] == {"macro_uit": result["datasets"]["macro_uit"]}
 
 
-def test_with_clause_is_allowed(po: PeruOpen) -> None:
+def test_with_clause_is_allowed(pe: PeruOpen) -> None:
     sql = "WITH u AS (SELECT * FROM macro_uit) SELECT max(valor) AS m FROM u;"
-    assert po.query_readonly(sql)["rows"] == [{"m": 5500}]
+    assert pe.query_readonly(sql)["rows"] == [{"m": 5500}]
 
 
 @pytest.mark.parametrize(
@@ -47,25 +47,25 @@ def test_with_clause_is_allowed(po: PeruOpen) -> None:
         "",
     ],
 )
-def test_non_select_is_rejected(po: PeruOpen, sql: str) -> None:
+def test_non_select_is_rejected(pe: PeruOpen, sql: str) -> None:
     with pytest.raises(ReadOnlyQueryError):
-        po.query_readonly(sql)
+        pe.query_readonly(sql)
 
 
-def test_cannot_read_arbitrary_files(po: PeruOpen, tmp_path: Path) -> None:
+def test_cannot_read_arbitrary_files(pe: PeruOpen, tmp_path: Path) -> None:
     secret = tmp_path / "secreto.csv"
     secret.write_text("clave\nhunter2\n")
     for fn in ("read_csv", "read_text"):
         with pytest.raises(ReadOnlyQueryError):
-            po.query_readonly(f"SELECT * FROM {fn}('{secret.as_posix()}')")
+            pe.query_readonly(f"SELECT * FROM {fn}('{secret.as_posix()}')")
 
 
-def test_mcp_server_tools(po: PeruOpen) -> None:
+def test_mcp_server_tools(pe: PeruOpen) -> None:
     fastmcp = pytest.importorskip("fastmcp")
     from peruopen.mcp_server import build_server
 
     async def run() -> None:
-        async with fastmcp.Client(build_server(po)) as client:
+        async with fastmcp.Client(build_server(pe)) as client:
             tools = {t.name for t in await client.list_tools()}
             assert tools == {"list_datasets", "describe_dataset", "query"}
             result = await client.call_tool("query", {"sql": "SELECT count(*) AS n FROM macro_uit"})
