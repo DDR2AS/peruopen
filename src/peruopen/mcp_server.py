@@ -20,7 +20,7 @@ from .engine import DEFAULT_LIMIT, MAX_LIMIT, PeruOpen
 from .exceptions import PeruOpenError
 
 INSTRUCTIONS = """\
-Datos públicos oficiales del Perú (BCRP, SUNAT, INEI…), curados y versionados.
+Datos públicos oficiales del Perú, curados y versionados.
 Flujo recomendado: list_datasets → describe_dataset → query.
 Cada dataset es una tabla con su mismo nombre. Solo se permiten SELECT.
 Cita siempre la fuente (source_name) y la fecha del dato (retrieved_at) al responder.

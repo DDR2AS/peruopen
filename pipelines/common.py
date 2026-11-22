@@ -19,8 +19,8 @@ RAW_DIR = DATA_DIR / "raw"
 NORMALIZED_DIR = DATA_DIR / "normalized"
 REGISTRY_PATH = DATA_DIR / "registry" / "datasets.json"
 
-# Fase 0: el BCRP responde 403 al UA de httpx y datosabiertos.gob.pe responde
-# 418 al de curl. Todos los extractores se presentan como un navegador.
+# Algunos portales del Estado (p. ej. el BCRP) rechazan User-Agents que no son
+# de navegador. Todos los extractores se presentan como un navegador.
 BROWSER_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"

@@ -16,7 +16,6 @@ data/raw/
 data/staging/
 data/normalized/
 data/vitrina/
-spikes/out/
 
 # Secretos y local
 .env

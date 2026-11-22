@@ -1,0 +1,7 @@
+# Dependencias para probar peruopen (librería + servidor MCP para Claude).
+# Instalar con:  pip install -r requirements.txt
+
+peruopen[mcp]==0.1.0a2
+
+# Opcional: para obtener los resultados como tablas con .df() (pandas) o .pl() (polars)
+pandas>=2.2

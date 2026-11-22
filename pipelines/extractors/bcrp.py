@@ -2,7 +2,7 @@
 
 Endpoint: {API}/{codigo}/json/{desde}/{hasta}/esp
 
-Particularidades verificadas en la Fase 0 (ver docs/fuentes.md):
+Particularidades de la fuente:
 - Fechas en español: diarias "02.Ene.25", mensuales "Ene.2025". Septiembre es
   "Set" en las diarias y "Sep" en las mensuales.
 - Los días sin dato vienen como "n.d.".

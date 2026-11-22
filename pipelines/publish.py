@@ -1,6 +1,6 @@
 """Publica `data/normalized/` en la vitrina (carpeta local o Cloudflare R2).
 
-Layout (ver docs/hosting.md):
+Layout:
     v1/manifest.json                          ← la "etiqueta": apunta a la última snapshot
     v1/snapshots/<id>/manifest.json           ← copia congelada, para fijar versiones
     v1/snapshots/<id>/<dataset>.parquet       ← inmutable, nunca se sobrescribe

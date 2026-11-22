@@ -3,15 +3,13 @@
 **Datos públicos oficiales del Perú, curados y versionados, listos para consultar
 con una línea de Python o SQL, y sin scraping al ejecutar.**
 
-> 🚧 **Estado: pre-alpha.** Ya funcionan el módulo `macro` (BCRP y UIT), la
-> librería y el servidor MCP. Todavía no hay versión en PyPI ni vitrina pública.
-> Ver [docs/roadmap.md](https://github.com/DDR2AS/peruopen/blob/main/docs/roadmap.md).
+> 🚧 **Estado: alpha.** La API puede cambiar entre versiones; los cambios se
+> anotan en el [CHANGELOG](https://github.com/DDR2AS/peruopen/blob/main/CHANGELOG.md).
 
 ## Qué es
 
-peruopen reúne datasets públicos del Estado peruano (SUNAT, BCRP, INEI/RENIEC,
-MEF, El Peruano) en archivos **Apache Parquet** normalizados y validados, con un
-catálogo único. Se consultan con **DuckDB**, se exportan a Polars o Pandas, y se
+peruopen reúne datasets públicos del Estado peruano en archivos **Apache
+Parquet** normalizados y validados, con un catálogo único. Se consultan con **DuckDB**, se exportan a Polars o Pandas, y se
 exponen a agentes de IA (Claude, Cursor, etc.) mediante un servidor **MCP**.
 
 La diferencia con un scraper: los portales del Estado cambian, se caen o bloquean
@@ -71,24 +69,12 @@ python -m pipelines run --target local --dir data/vitrina   # cocina + vitrina l
 PERUOPEN_BASE_URL="$PWD/data/vitrina" python -c "import peruopen as pe; print(pe.macro.uit())"
 ```
 
-## Datasets planificados (v0.1)
+## Datasets disponibles
 
-| Módulo | Fuente | Contenido |
-|---|---|---|
-| `calendario` | El Peruano / gob.pe | Feriados y días no laborables, días hábiles 2020–2027 |
-| `macro` ✅ | BCRP, SUNAT | Tipo de cambio, inflación, tasa de referencia, PBI, UIT |
-| `geo` | INEI / RENIEC | Ubigeos con equivalencias, coordenadas y macrorregión |
-| `sunat` | SUNAT | Padrón reducido RUC |
-
-`estado` (MEF y SEACE/OECE) queda para v0.2.
-
-## Proyectos relacionados
-
-- [perudata](https://github.com/cesarchavezp29/perudata): microdatos de encuestas
-  del INEI (ENAHO, ENDES…). Complementa a peruopen.
-- [horaciochacon/peruopen](https://github.com/horaciochacon/peruopen): paquete
-  **R** con el mismo nombre que envuelve el portal CKAN de datosabiertos.gob.pe.
-  No tiene relación con este proyecto.
+| Dataset | Fuente | Contenido | Detalle |
+|---|---|---|---|
+| `macro_series` | BCRP | Tipo de cambio (interbancario y SBS), inflación, tasa de referencia y PBI, desde 2000 | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/macro_series.md) |
+| `macro_uit` | SUNAT | Valor de la UIT por año desde 1994, con su Decreto Supremo | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/macro_uit.md) |
 
 ## Licencia
 
