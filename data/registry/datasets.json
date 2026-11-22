@@ -1,0 +1,49 @@
+{
+  "macro_series": {
+    "description": "Series macroeconómicas oficiales del BCRP: tipo de cambio (interbancario y SBS), inflación (IPC Lima), tasa de referencia y PBI. Formato largo: una fila por serie y fecha.",
+    "module": "macro",
+    "extractor": "bcrp",
+    "source_name": "Banco Central de Reserva del Perú (BCRPData)",
+    "source_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/",
+    "update_frequency": "Diaria (tipo de cambio) y mensual (IPC, tasa de referencia, PBI)",
+    "primary_key": ["serie", "fecha"],
+    "min_records": 20000,
+    "columns": [
+      {"name": "serie", "type": "string", "description": "Código de la serie en BCRPData (p. ej. PD04638PD)"},
+      {"name": "nombre", "type": "string", "description": "Nombre legible de la serie"},
+      {"name": "frecuencia", "type": "string", "description": "'diaria' o 'mensual'"},
+      {"name": "unidad", "type": "string", "description": "Unidad del valor (S/ por US$, %, índice)"},
+      {"name": "fecha", "type": "date", "description": "Fecha del dato. En series mensuales es el primer día del mes"},
+      {"name": "valor", "type": "float64", "description": "Valor publicado. Los días sin dato ('n.d.') se omiten"}
+    ],
+    "reuse_policy": {
+      "status": "open-attribution",
+      "license": "Condiciones de uso de BCRPData: reproducción libre citando la fuente",
+      "license_url": "https://estadisticas.bcrp.gob.pe/estadisticas/series/ayuda/condiciones-de-uso",
+      "attribution_required": true,
+      "redistribution_ok": true
+    }
+  },
+  "macro_uit": {
+    "description": "Valor histórico de la Unidad Impositiva Tributaria (UIT) por año, con el Decreto Supremo que lo fija.",
+    "module": "macro",
+    "extractor": "uit",
+    "source_name": "SUNAT (valores fijados por Decreto Supremo del MEF)",
+    "source_url": "https://www.sunat.gob.pe/indicestasas/uit.html",
+    "update_frequency": "Anual (diciembre)",
+    "primary_key": ["anio"],
+    "min_records": 25,
+    "columns": [
+      {"name": "anio", "type": "int16", "description": "Año de vigencia"},
+      {"name": "valor", "type": "int32", "description": "Valor de la UIT en soles (S/)"},
+      {"name": "base_legal", "type": "string", "description": "Decreto Supremo que fija el valor (p. ej. D.S. N° 301-2025-EF)"}
+    ],
+    "reuse_policy": {
+      "status": "open-attribution",
+      "license": "Dato normativo público (Decreto Supremo)",
+      "license_url": "https://www.sunat.gob.pe/indicestasas/uit.html",
+      "attribution_required": true,
+      "redistribution_ok": true
+    }
+  }
+}

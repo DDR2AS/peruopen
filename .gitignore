@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Datos generados por el pipeline: se publican en R2, no se versionan en git.
+# data/registry/ SÍ se versiona.
+data/raw/
+data/staging/
+data/normalized/
+data/vitrina/
+spikes/out/
+
+# Secretos y local
+.env
+CLAUDE.local.md
+.claude/settings.local.json
