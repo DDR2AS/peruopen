@@ -5,7 +5,7 @@ con una línea de Python o SQL, y sin scraping al ejecutar.**
 
 > 🚧 **Estado: pre-alpha.** Ya funcionan el módulo `macro` (BCRP y UIT), la
 > librería y el servidor MCP. Todavía no hay versión en PyPI ni vitrina pública.
-> Ver [docs/roadmap.md](docs/roadmap.md).
+> Ver [docs/roadmap.md](https://github.com/DDR2AS/peruopen/blob/main/docs/roadmap.md).
 
 ## Qué es
 
@@ -85,5 +85,5 @@ PERUOPEN_BASE_URL="$PWD/data/vitrina" python -c "import peruopen as po; print(po
 
 ## Licencia
 
-El código es MIT (ver [LICENSE](LICENSE)). Los **datos** conservan la licencia de
+El código es MIT (ver [LICENSE](https://github.com/DDR2AS/peruopen/blob/main/LICENSE)). Los **datos** conservan la licencia de
 su fuente oficial.

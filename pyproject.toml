@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "peruopen"
-version = "0.1.0.dev0"
+version = "0.1.0a1"
 description = "Datos públicos oficiales del Perú (SUNAT, BCRP, INEI, MEF), curados en Parquet y consultables con DuckDB y MCP."
 readme = "README.md"
 license = "MIT"
@@ -13,7 +13,7 @@ requires-python = ">=3.11"
 authors = [{ name = "Diego Avila" }]
 keywords = ["peru", "open-data", "datos-abiertos", "duckdb", "parquet", "mcp", "sunat", "bcrp", "ubigeo"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
@@ -21,6 +21,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Information Analysis",
+    "Natural Language :: Spanish",
+    "Operating System :: OS Independent",
 ]
 # Instalación base: solo lo necesario para LEER los datos ya publicados.
 dependencies = [
@@ -46,6 +48,7 @@ peruopen-mcp = "peruopen.mcp_server:main"
 Homepage = "https://github.com/DDR2AS/peruopen"
 Repository = "https://github.com/DDR2AS/peruopen"
 Issues = "https://github.com/DDR2AS/peruopen/issues"
+Documentation = "https://github.com/DDR2AS/peruopen/tree/main/docs"
 
 [dependency-groups]
 dev = [

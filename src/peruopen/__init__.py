@@ -12,7 +12,13 @@ revisa como máximo una vez al día si hay una versión nueva.
 
 from __future__ import annotations
 
-__version__ = "0.1.0.dev0"
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _pkg_version
+
+try:
+    __version__ = _pkg_version("peruopen")
+except PackageNotFoundError:  # ejecutando desde el código fuente sin instalar
+    __version__ = "0.0.0+local"
 
 from typing import Any
 
