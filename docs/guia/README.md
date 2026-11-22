@@ -18,8 +18,8 @@ repo, sin saber cómo funciona por dentro y sin configurar Cloudflare ni GitHub.
 
 | Tabla | Contenido | Fuente |
 |---|---|---|
-| `bcrp_catalog` | Catálogo de todas las series del BCRP (~17 000): nombre, unidad, frecuencia | BCRP |
-| `bcrp_daily`, `bcrp_monthly`, `bcrp_quarterly`, `bcrp_annual` | Datos de todas esas series (tipo de cambio, inflación, tasas, PBI…) | BCRP |
+| `bcrp_catalog` | Las 15 series del BCRP incluidas: descripción, unidad y fechas | BCRP |
+| `bcrp_daily`, `bcrp_monthly` | Tipo de cambio, reservas, cobre y oro (diario); inflación, tasa de referencia, PBI, desempleo y morosidad (mensual) | BCRP |
 | `sunat_uit` | Valor de la UIT por año desde 1994, con su Decreto Supremo | SUNAT |
 
 El detalle de cada columna está en [docs/datasets/](../datasets/).

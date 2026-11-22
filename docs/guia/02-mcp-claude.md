@@ -14,7 +14,7 @@ Claude Desktop arranca en tu computadora y que le ofrece cuatro herramientas:
 |---|---|
 | `list_datasets` | Le dice a Claude qué datos hay |
 | `describe_dataset` | Le explica las columnas, la fuente oficial y la fecha del dato |
-| `search_series` | Busca entre las ~17 000 series del BCRP la que corresponde a tu pregunta |
+| `search_series` | Busca entre los indicadores del BCRP el que corresponde a tu pregunta |
 | `query` | Ejecuta una consulta SQL **de solo lectura** y devuelve el resultado |
 
 Es seguro: el servidor solo acepta consultas `SELECT`, no puede leer otros

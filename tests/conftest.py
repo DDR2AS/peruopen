@@ -44,30 +44,24 @@ def bcrp_tables() -> dict[str, pa.Table]:
     catalog = pa.table(
         {
             "code": ["PD04637PD", "PD04638PD", "PN01273PM", "PN07746EM"],
+            "description": [
+                "Tipo de cambio interbancario, compra",
+                "Tipo de cambio interbancario, venta",
+                "Inflación anual: IPC Lima Metropolitana, variación % 12 meses",
+                "Morosidad bancaria: cartera atrasada / colocaciones de las empresas bancarias",
+            ],
             "name": [
                 "Tipo de cambio - TC Interbancario (S/ por US$) - Compra",
                 "Tipo de cambio - TC Interbancario (S/ por US$) - Venta",
                 "Índice de precios Lima Metropolitana (var% 12 meses) - IPC",
-                "Cartera atrasada neta / Colocaciones netas (%) - Empresas bancarias",
-            ],
-            "category": ["Tipo de cambio", "Tipo de cambio", "Inflación", "Empresas bancarias"],
-            "series_group": [
-                "Tipo de cambio",
-                "Tipo de cambio",
-                "Índice de precios",
-                "Indicadores",
+                "Cartera atrasada neta / Colocaciones netas (%) - Empresas Bancarias",
             ],
             "unit": ["S/ por US$", "S/ por US$", "%", "%"],
             "frequency": ["daily", "daily", "monthly", "monthly"],
             "table_name": ["bcrp_daily", "bcrp_daily", "bcrp_monthly", "bcrp_monthly"],
-            "last_date": [
-                date(2026, 11, 19),
-                date(2026, 11, 19),
-                date(2026, 10, 1),
-                date(2026, 9, 1),
-            ],
+            "first_date": [date(2026, 11, 18), date(2026, 11, 18), date(2026, 9, 1), None],
+            "last_date": [date(2026, 11, 19), date(2026, 11, 19), date(2026, 10, 1), None],
             "observations": pa.array([2, 2, 2, 0], pa.int64()),
-            "is_active": [True, True, True, True],
         }
     )
     daily = pa.table(

@@ -32,7 +32,8 @@ import peruopen as pe
 pe.list_datasets()  # qué hay
 pe.macro.uit(2026)  # -> 5500
 pe.macro.exchange_rate(start="2026-01-01").df()  # pandas (o .pl() para polars)
-pe.macro.search("morosidad").df()  # buscar entre todas las series del BCRP
+pe.macro.inflation().df()  # inflación anual
+pe.macro.catalog().df()  # las 15 series del BCRP incluidas
 
 pe.query("""
     SELECT year(date) AS year, round(avg(value), 3) AS fx_avg
@@ -74,8 +75,8 @@ PERUOPEN_BASE_URL="$PWD/data/vitrina" python -c "import peruopen as pe; print(pe
 
 | Dataset | Fuente | Contenido | Detalle |
 |---|---|---|---|
-| `bcrp_catalog` | BCRP | Catálogo de **todas** las series del BCRP (~17 000): nombre, unidad, frecuencia | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/bcrp.md) |
-| `bcrp_daily` · `bcrp_monthly` · `bcrp_quarterly` · `bcrp_annual` | BCRP | Datos de todas esas series: tipo de cambio, inflación, tasas, PBI, crédito, balanza comercial… | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/bcrp.md) |
+| `bcrp_catalog` | BCRP | Las 15 series incluidas: descripción, unidad, frecuencia y fechas | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/bcrp.md) |
+| `bcrp_daily` · `bcrp_monthly` | BCRP | Tipo de cambio, reservas, cobre y oro (diario); inflación, tasa de referencia, PBI, desempleo y morosidad bancaria (mensual) | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/bcrp.md) |
 | `sunat_uit` | SUNAT | Valor de la UIT por año desde 1994, con su Decreto Supremo | [ver](https://github.com/DDR2AS/peruopen/blob/main/docs/datasets/sunat_uit.md) |
 
 ## Licencia

@@ -4,6 +4,32 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 Los **datos** se actualizan aparte (snapshots en la vitrina) y no generan
 versiones nuevas del paquete.
 
+## [0.1.0a6] - 2026-11-22
+
+Release base: un **núcleo de 15 indicadores** verificados y actualizados cada
+semana, en lugar de las ~17 000 series del BCRP.
+
+### Agregado
+
+- Atajos nuevos: `pe.macro.reserves()`, `unemployment()`, `bank_delinquency()`,
+  `metal_price("copper" | "gold")` y `catalog()`.
+- Verificación del nombre oficial de cada serie en cada actualización: si el BCRP
+  cruza o reasigna un código, la actualización se detiene en lugar de publicar
+  datos equivocados.
+
+### Cambiado
+
+- `bcrp_catalog` ahora lista solo las 15 series del núcleo, con `description`
+  (qué mide, en lenguaje claro) y `unit`.
+- `bcrp_daily` y `bcrp_monthly` contienen solo las series del núcleo.
+- Se retiran `bcrp_quarterly` y `bcrp_annual`. Las demás series del BCRP volverán
+  más adelante.
+
+### Corregido
+
+- La API del BCRP devuelve las series ordenadas por código y no en el orden
+  pedido. Ahora se piden ordenadas y se verifica cada nombre.
+
 ## [0.1.0a5] - 2026-11-22
 
 ### Corregido

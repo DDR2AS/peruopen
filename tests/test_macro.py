@@ -35,7 +35,7 @@ def test_series_routes_to_the_right_table(pe: PeruOpen) -> None:
     assert peruopen.macro.series("PN01273PM", end="2026-09-30", conn=pe).fetchall() == [
         (date(2026, 9, 1), 4.55)
     ]
-    with pytest.raises(LookupError, match="search"):
+    with pytest.raises(LookupError, match="catalog"):
         peruopen.macro.series("NOEXISTE", conn=pe)
 
 
@@ -64,6 +64,11 @@ def test_search(pe: PeruOpen, text: str, expected: list[str]) -> None:
 def test_search_by_frequency(pe: PeruOpen) -> None:
     rows = peruopen.macro.search("ipc", frequency="daily", conn=pe).fetchall()
     assert rows == []
+
+
+def test_catalog_lists_available_series(pe: PeruOpen) -> None:
+    codes = [r[0] for r in peruopen.macro.catalog(conn=pe).fetchall()]
+    assert codes == ["PD04637PD", "PD04638PD", "PN01273PM", "PN07746EM"]
 
 
 def test_uit(pe: PeruOpen) -> None:

@@ -1,9 +1,9 @@
-"""Atajos para datos macroeconómicos: todas las series del BCRP y la UIT.
+"""Atajos para los indicadores macroeconómicos del Perú (BCRP) y la UIT (SUNAT).
 
 import peruopen as pe
-pe.macro.search("morosidad")                       # encontrar el código de una serie
-pe.macro.series("PN01271PM", start="2025-01-01")   # cualquier serie por su código
+pe.macro.catalog().df()                            # las series disponibles
 pe.macro.exchange_rate(start="2026-01-01").df()    # tipo de cambio
+pe.macro.inflation().df()                          # inflación anual
 pe.macro.uit(2026)                                 # -> 5500
 """
 
@@ -25,6 +25,10 @@ EXCHANGE_RATE = {
 INFLATION = {"monthly": "PN01271PM", "12m": "PN01273PM"}
 POLICY_RATE = "PD04722MM"
 GDP_GROWTH = "PN01728AM"
+RESERVES = "PD04650MD"
+UNEMPLOYMENT = "PN38063GM"
+BANK_DELINQUENCY = "PN07746EM"
+METALS = {"copper": "PD04701XD", "gold": "PD04704XD"}
 
 DateLike = str | date | None
 
@@ -40,8 +44,6 @@ SYNONYMS: dict[str, list[str]] = {
     "gdp": ["pbi", "producto bruto interno"],
     "desempleo": ["desempleo", "desocupa"],
     "reservas": ["reservas", "rin"],
-    "prestamos": ["prestamos", "credito", "colocaciones"],
-    "creditos": ["credito", "colocaciones"],
 }
 
 
@@ -61,12 +63,18 @@ def _conn(conn: PeruOpen | None) -> PeruOpen:
     return _pe()
 
 
+def catalog(*, conn: PeruOpen | None = None) -> duckdb.DuckDBPyRelation:
+    """Las series del BCRP incluidas en peruopen, con su descripción, unidad y fechas."""
+    return _conn(conn).query("SELECT * FROM bcrp_catalog ORDER BY frequency, code")
+
+
 def _table_for(code: str, conn: PeruOpen) -> str:
     row = conn.query("SELECT table_name FROM bcrp_catalog WHERE code = ?", [code]).fetchone()
     if row is None:
+        available = ", ".join(r[0] for r in conn.query("SELECT code FROM bcrp_catalog").fetchall())
         raise LookupError(
-            f"La serie {code!r} no está en el catálogo del BCRP. "
-            "Búscala con pe.macro.search('palabras clave')."
+            f"La serie {code!r} no está incluida en peruopen. Por ahora solo están las "
+            f"series del núcleo (ver pe.macro.catalog()): {available}"
         )
     return str(row[0])
 
@@ -78,7 +86,7 @@ def series(
     *,
     conn: PeruOpen | None = None,
 ) -> duckdb.DuckDBPyRelation:
-    """Cualquier serie del BCRP por su código. Columnas: date, value."""
+    """Una serie del BCRP por su código (ver pe.macro.catalog()). Columnas: date, value."""
     c = _conn(conn)
     table = _table_for(code, c)
     sql = f"SELECT date, value FROM {table} WHERE code = ?"
@@ -95,20 +103,19 @@ def series(
 def search(
     text: str,
     *,
-    frequency: Literal["daily", "monthly", "quarterly", "annual"] | None = None,
-    active_only: bool = True,
+    frequency: Literal["daily", "monthly"] | None = None,
     limit: int = 20,
     conn: PeruOpen | None = None,
 ) -> duckdb.DuckDBPyRelation:
-    """Busca series del BCRP por palabras (sin importar tildes ni mayúsculas).
+    """Busca entre las series disponibles por palabras (sin importar tildes ni
+    mayúsculas; entiende sinónimos como "morosidad" o "dólar").
 
-    Todas las palabras deben aparecer en el nombre, la categoría o el grupo.
-    Columnas: code, series_group, name, category, unit, frequency, last_date, table_name.
+    Columnas: code, description, name, unit, frequency, last_date, table_name.
     """
     words = [w for w in text.lower().split() if w]
     if not words:
         raise ValueError("Escribe al menos una palabra para buscar")
-    haystack = "lower(strip_accents(name || ' ' || category || ' ' || series_group))"
+    haystack = "lower(strip_accents(description || ' ' || name))"
     conditions, params = [], []
     for word in words:
         alternatives = SYNONYMS.get(_plain(word), [word])
@@ -121,15 +128,13 @@ def search(
         )
         params.extend(alternatives)
     sql = (
-        "SELECT code, series_group, name, category, unit, frequency, last_date, table_name "
+        "SELECT code, description, name, unit, frequency, last_date, table_name "
         "FROM bcrp_catalog WHERE " + " AND ".join(conditions)
     )
     if frequency is not None:
         sql += " AND frequency = ?"
         params.append(frequency)
-    if active_only:
-        sql += " AND is_active"
-    sql += " ORDER BY is_active DESC, observations DESC, code LIMIT ?"
+    sql += " ORDER BY code LIMIT ?"
     params.append(int(limit))
     return _conn(conn).query(sql, params)
 
@@ -142,7 +147,7 @@ def exchange_rate(
     side: Literal["buy", "sell"] = "sell",
     conn: PeruOpen | None = None,
 ) -> duckdb.DuckDBPyRelation:
-    """Tipo de cambio diario, en S/ por US$ (BCRP)."""
+    """Tipo de cambio diario, en S/ por US$."""
     try:
         code = EXCHANGE_RATE[(kind, side)]
     except KeyError:
@@ -157,7 +162,7 @@ def inflation(
     period: Literal["12m", "monthly"] = "12m",
     conn: PeruOpen | None = None,
 ) -> duckdb.DuckDBPyRelation:
-    """Inflación de Lima Metropolitana en % (IPC, BCRP): variación en 12 meses o mensual."""
+    """Inflación de Lima Metropolitana en % (IPC): variación en 12 meses o mensual."""
     if period not in INFLATION:
         raise ValueError("period debe ser '12m' o 'monthly'")
     return series(INFLATION[period], start, end, conn=conn)
@@ -173,8 +178,42 @@ def policy_rate(
 def gdp_growth(
     start: DateLike = None, end: DateLike = None, *, conn: PeruOpen | None = None
 ) -> duckdb.DuckDBPyRelation:
-    """Crecimiento del PBI, variación % interanual (mensual, BCRP)."""
+    """Crecimiento del PBI: variación % respecto al mismo mes del año anterior."""
     return series(GDP_GROWTH, start, end, conn=conn)
+
+
+def reserves(
+    start: DateLike = None, end: DateLike = None, *, conn: PeruOpen | None = None
+) -> duckdb.DuckDBPyRelation:
+    """Reservas internacionales netas del BCRP, en millones de US$ (diario)."""
+    return series(RESERVES, start, end, conn=conn)
+
+
+def unemployment(
+    start: DateLike = None, end: DateLike = None, *, conn: PeruOpen | None = None
+) -> duckdb.DuckDBPyRelation:
+    """Tasa de desempleo de Lima Metropolitana en % (promedio móvil de 3 meses)."""
+    return series(UNEMPLOYMENT, start, end, conn=conn)
+
+
+def bank_delinquency(
+    start: DateLike = None, end: DateLike = None, *, conn: PeruOpen | None = None
+) -> duckdb.DuckDBPyRelation:
+    """Morosidad bancaria: cartera atrasada / colocaciones de las empresas bancarias, en %."""
+    return series(BANK_DELINQUENCY, start, end, conn=conn)
+
+
+def metal_price(
+    metal: Literal["copper", "gold"],
+    start: DateLike = None,
+    end: DateLike = None,
+    *,
+    conn: PeruOpen | None = None,
+) -> duckdb.DuckDBPyRelation:
+    """Cotización internacional diaria: cobre (¢US$ por libra) u oro (US$ por onza troy)."""
+    if metal not in METALS:
+        raise ValueError("metal debe ser 'copper' o 'gold'")
+    return series(METALS[metal], start, end, conn=conn)
 
 
 def uit(year: int | None = None, *, conn: PeruOpen | None = None) -> int:

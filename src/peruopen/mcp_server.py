@@ -22,21 +22,21 @@ import duckdb
 from .engine import DEFAULT_LIMIT, MAX_LIMIT, PeruOpen, _jsonable
 from .exceptions import PeruOpenError
 
-FREQUENCIES = ("daily", "monthly", "quarterly", "annual")
+FREQUENCIES = ("daily", "monthly")
 
 INSTRUCTIONS = """\
 Datos públicos oficiales del Perú (Peru official open data), curados y versionados.
-Incluye todas las series estadísticas del BCRP (tipo de cambio / exchange rate,
-inflación, tasas de interés, PBI / GDP, crédito, balanza comercial…) y la UIT.
+Incluye los principales indicadores del BCRP: tipo de cambio / exchange rate,
+inflación, tasa de referencia, PBI / GDP, reservas internacionales, desempleo de
+Lima, morosidad bancaria, cobre y oro; y la UIT de SUNAT.
 
 Flujo recomendado:
-1. Para series del BCRP: search_series("palabras en español") para encontrar el
-   código y la tabla donde están sus datos.
+1. search_series("palabras en español") o una consulta a bcrp_catalog para
+   encontrar el código de la serie y la tabla donde están sus datos.
 2. describe_dataset para ver columnas, fuente y fecha del dato.
 3. query con SQL (DuckDB). Las tablas se llaman igual que los datasets:
-   bcrp_daily, bcrp_monthly, bcrp_quarterly, bcrp_annual (code, date, value),
-   bcrp_catalog (nombres, unidades y frecuencia de cada serie) y
-   sunat_uit (year, value, legal_basis).
+   bcrp_daily y bcrp_monthly (code, date, value), bcrp_catalog (descripción,
+   unidad y frecuencia de cada serie) y sunat_uit (year, value, legal_basis).
 Solo se permiten SELECT.
 Cita siempre la fuente (source_name) y la fecha del dato (retrieved_at) al responder.
 """
@@ -72,16 +72,16 @@ def build_server(conn: PeruOpen | None = None) -> Any:
 
     @mcp.tool
     def search_series(text: str, frequency: str | None = None, limit: int = 20) -> dict[str, Any]:
-        """Busca series del BCRP por palabras en español, p. ej. "tipo de cambio",
-        "morosidad bancaria" o "exportaciones cobre". Devuelve code, series_group,
-        name, unit, frequency, last_date y table_name (la tabla donde consultar sus datos).
-        frequency es opcional: daily, monthly, quarterly o annual."""
+        """Busca entre las series del BCRP disponibles por palabras en español, p. ej.
+        "tipo de cambio", "morosidad" o "cobre". Devuelve code, description, name, unit,
+        frequency, last_date y table_name (la tabla donde consultar sus datos).
+        frequency es opcional: daily o monthly."""
 
         def run() -> dict[str, Any]:
             from .datasets import macro
 
             if frequency is not None and frequency not in FREQUENCIES:
-                raise ValueError("frequency debe ser daily, monthly, quarterly o annual")
+                raise ValueError("frequency debe ser daily o monthly")
             rel = macro.search(
                 text,
                 frequency=frequency,  # type: ignore[arg-type]

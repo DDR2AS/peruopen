@@ -10,27 +10,16 @@ from datetime import UTC, date, datetime, timedelta
 import duckdb
 import pyarrow as pa
 
+from .extractors.bcrp import CORE, TABLES
 from .registry import DatasetSpec
 
-# Series clave que deben existir y estar al día (las usan los atajos de pe.macro).
+# Antigüedad máxima del último dato de cada serie del núcleo.
+MAX_AGE = {"daily": timedelta(days=21), "monthly": timedelta(days=200)}
 CORE_SERIES: dict[str, dict[str, timedelta]] = {
-    "bcrp_daily": {
-        "PD04637PD": timedelta(days=21),  # TC interbancario compra
-        "PD04638PD": timedelta(days=21),  # TC interbancario venta
-        "PD04639PD": timedelta(days=21),  # TC SBS compra
-        "PD04640PD": timedelta(days=21),  # TC SBS venta
-    },
-    "bcrp_monthly": {
-        "PN01271PM": timedelta(days=200),  # IPC var% mensual
-        "PN01273PM": timedelta(days=200),  # IPC var% 12 meses
-        "PN38705PM": timedelta(days=200),  # IPC índice
-        "PD04722MM": timedelta(days=200),  # tasa de referencia
-        "PN01770AM": timedelta(days=200),  # PBI índice
-        "PN01728AM": timedelta(days=200),  # PBI var%
-    },
+    table: {s.code: MAX_AGE[s.frequency] for s in CORE if s.frequency == frequency}
+    for frequency, table in TABLES.items()
 }
 FX_SERIES = ("PD04637PD", "PD04638PD", "PD04639PD", "PD04640PD")
-MIN_CATALOG_COVERAGE = 0.80  # al menos 80 % de las series del catálogo con datos
 
 
 def validate(spec: DatasetSpec, table: pa.Table, *, today: date | None = None) -> list[str]:
@@ -102,18 +91,15 @@ def _bcrp_data(name: str) -> Callable[[pa.Table, date], list[str]]:
 
 def _bcrp_catalog(table: pa.Table, today: date) -> list[str]:
     errors = []
-    con = duckdb.connect()
-    con.register("t", table)
-    total = int(_scalar(con, "SELECT count(*) FROM t") or 0)  # type: ignore[call-overload]
-    with_data = int(_scalar(con, "SELECT count(*) FROM t WHERE observations > 0") or 0)  # type: ignore[call-overload]
-    if total and with_data / total < MIN_CATALOG_COVERAGE:
-        errors.append(f"Solo {with_data} de {total} series tienen datos ({with_data / total:.0%})")
-    bad_freq = _scalar(
-        con,
-        "SELECT count(*) FROM t WHERE frequency NOT IN ('daily','monthly','quarterly','annual')",
-    )
-    if bad_freq:
-        errors.append(f"{bad_freq} series con frecuencia desconocida")
+    codes = table.column("code").to_pylist()
+    expected = {s.code for s in CORE}
+    if set(codes) != expected:
+        errors.append(f"El catálogo no coincide con el núcleo: faltan {expected - set(codes)}")
+    empty = [
+        c for c, n in zip(codes, table.column("observations").to_pylist(), strict=True) if not n
+    ]
+    if empty:
+        errors.append(f"Series del núcleo sin datos: {empty}")
     return errors
 
 
@@ -138,7 +124,5 @@ DATASET_VALIDATORS: dict[str, Callable[[pa.Table, date], list[str]]] = {
     "bcrp_catalog": _bcrp_catalog,
     "bcrp_daily": _bcrp_data("bcrp_daily"),
     "bcrp_monthly": _bcrp_data("bcrp_monthly"),
-    "bcrp_quarterly": _bcrp_data("bcrp_quarterly"),
-    "bcrp_annual": _bcrp_data("bcrp_annual"),
     "sunat_uit": _sunat_uit,
 }

@@ -54,22 +54,28 @@ pe.macro.gdp_growth(start="2024-01-01").df()
 La **primera** consulta tarda unos segundos porque descarga los datos.
 Las siguientes son instantáneas: los datos quedan guardados en tu computadora.
 
-## Todas las series del BCRP
+## Las series disponibles
 
-peruopen incluye **todas** las series que publica el BCRP (~17 000). Para
-encontrar la que necesitas, busca por palabras, sin importar tildes ni mayúsculas:
-
-```python
-pe.macro.search("morosidad").df()
-pe.macro.search("exportaciones cobre", frequency="monthly").df()
-pe.macro.search("reservas internacionales").df()
-```
-
-Y luego pide sus datos por código:
+peruopen incluye **15 indicadores del BCRP**, verificados y actualizados cada semana:
 
 ```python
-pe.macro.series("PN01273PM", start="2020-01-01").df()
+pe.macro.catalog().df()  # código, descripción, unidad y rango de fechas
 ```
+
+| Atajo | Qué devuelve |
+|---|---|
+| `pe.macro.exchange_rate()` | Tipo de cambio (interbancario o SBS, compra o venta) |
+| `pe.macro.inflation()` | Inflación de Lima (anual o mensual) |
+| `pe.macro.policy_rate()` | Tasa de referencia del BCRP |
+| `pe.macro.gdp_growth()` | Crecimiento del PBI |
+| `pe.macro.reserves()` | Reservas internacionales netas |
+| `pe.macro.unemployment()` | Desempleo de Lima Metropolitana |
+| `pe.macro.bank_delinquency()` | Morosidad bancaria |
+| `pe.macro.metal_price("copper")` / `("gold")` | Precio del cobre o del oro |
+| `pe.macro.series("CÓDIGO")` | Cualquier serie del catálogo por su código |
+| `pe.macro.search("palabras")` | Buscar en el catálogo (entiende "dólar", "morosidad"…) |
+
+Todas aceptan `start=` y `end=` para filtrar fechas.
 
 ## Elegir el formato del resultado
 
@@ -89,8 +95,8 @@ Cada dataset es una tabla. Puedes escribir cualquier consulta SQL (dialecto Duck
 
 | Tabla | Contenido |
 |---|---|
-| `bcrp_catalog` | Nombre, unidad y frecuencia de cada serie del BCRP |
-| `bcrp_daily`, `bcrp_monthly`, `bcrp_quarterly`, `bcrp_annual` | Datos de las series: `code`, `date`, `value` |
+| `bcrp_catalog` | Descripción, unidad y frecuencia de cada serie del BCRP |
+| `bcrp_daily`, `bcrp_monthly` | Datos de las series: `code`, `date`, `value` |
 | `sunat_uit` | UIT por año: `year`, `value`, `legal_basis` |
 
 ```python
@@ -104,7 +110,7 @@ pe.query("""
 
 # Inflación vs. tasa de referencia, con los nombres del catálogo
 pe.query("""
-    SELECT c.name, d.date, d.value
+    SELECT c.description, d.date, d.value
     FROM bcrp_monthly d JOIN bcrp_catalog c USING (code)
     WHERE d.code IN ('PN01273PM', 'PD04722MM') AND d.date >= DATE '2024-01-01'
     ORDER BY d.date
@@ -141,7 +147,7 @@ nuevos y los descarga sola.
 |---|---|
 | `ModuleNotFoundError: No module named 'peruopen'` | Activa el entorno virtual donde lo instalaste (`peruopen-env\Scripts\activate`) |
 | `ModuleNotFoundError: No module named 'pandas'` al usar `.df()` | `pip install pandas` |
-| `La serie 'XXX' no está en el catálogo del BCRP` | Busca el código correcto con `pe.macro.search("palabras")` |
+| `La serie 'XXX' no está incluida en peruopen` | Revisa las series disponibles con `pe.macro.catalog()` |
 | `No existe el dataset 'xxx'. ¿Quisiste decir…?` | Revisa el nombre con `pe.list_datasets()` |
 | `No se pudo leer la vitrina … y no hay caché` | No hay internet y nunca se descargó nada. Conéctate una vez |
 | Advertencia `No se pudo revisar si hay datos nuevos` | Sin internet: está usando los datos que ya tenías. Es normal |

@@ -48,9 +48,16 @@ title("Inflación de Lima (variación 12 meses), últimos 6 meses")
 for month, value in pe.macro.inflation().fetchall()[-6:]:
     print(f"{month:%Y-%m}  {value:5.2f} %")
 
-title("Buscar series del BCRP: 'morosidad'")
-for code, group, name, *_ in pe.macro.search("morosidad", limit=5).fetchall():
-    print(f"{code}  {group} - {name}"[:110])
+title("Otros indicadores (último dato)")
+for label, rel in [
+    ("Tasa de referencia (%)", pe.macro.policy_rate()),
+    ("Reservas internacionales (millones US$)", pe.macro.reserves()),
+    ("Desempleo Lima (%)", pe.macro.unemployment()),
+    ("Morosidad bancaria (%)", pe.macro.bank_delinquency()),
+    ("Cobre (¢US$/lb)", pe.macro.metal_price("copper")),
+]:
+    day, value = rel.fetchall()[-1]
+    print(f"{label:42} {value:12,.2f}  ({day})")
 
 title("Estado de los datos")
 status = pe.status()
