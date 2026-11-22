@@ -1,8 +1,9 @@
 name: Cocina — publicar datos en R2
 
 # Extrae las fuentes oficiales, valida, construye los Parquet y los publica en
-# Cloudflare R2. Al inicio es solo manual. Cuando esté estable, se activa el
-# cron (descomenta `schedule`).
+# Cloudflare R2. Corre solo cada lunes y también se puede lanzar a mano.
+# Si un dataset falla, los demás se publican igual y el workflow termina en
+# rojo: GitHub te avisa por correo.
 on:
   workflow_dispatch:
     inputs:
@@ -10,8 +11,8 @@ on:
         description: "Solo estos datasets, separados por espacios (vacío = todos)"
         required: false
         default: ""
-  # schedule:
-  #   - cron: "0 8 * * 1"   # lunes 03:00 hora de Lima (08:00 UTC)
+  schedule:
+    - cron: "0 8 * * 1"  # lunes 03:00 hora de Lima (08:00 UTC)
 
 permissions:
   contents: read
@@ -51,3 +52,14 @@ jobs:
         with:
           name: catalog
           path: data/normalized/catalog.json
+      - name: Avisar si algún dataset falló
+        run: |
+          python - <<'EOF'
+          import json, sys
+          failed = json.load(open("data/normalized/catalog.json"))["failed"]
+          if failed:
+              for name, error in failed.items():
+                  print(f"::error title={name}::{error}")
+              sys.exit(1)
+          print("Todos los datasets se actualizaron bien")
+          EOF
