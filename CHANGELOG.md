@@ -4,6 +4,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 Los **datos** se actualizan aparte (snapshots en la vitrina) y no generan
 versiones nuevas del paquete.
 
+## [0.1.0a5] - 2026-11-22
+
+### Corregido
+
+- **Servidor MCP en Windows con Claude Desktop de la Microsoft Store:** las
+  consultas fallaban con "Permission Error: Cannot access file". Windows
+  redirige la caché que escriben los procesos de apps de la Store, y DuckDB no
+  reconocía la carpeta permitida. Ahora el modo de solo lectura permite
+  **únicamente los archivos exactos** que usa cada consulta, lo que además es
+  más estricto.
+
 ## [0.1.0a4] - 2026-11-22
 
 ### Corregido

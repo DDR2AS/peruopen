@@ -31,6 +31,10 @@ MAX_LIMIT = 1_000
 DEFAULT_TIMEOUT_S = 30.0
 
 
+def _sql_literal(text: str) -> str:
+    return "'" + text.replace("'", "''") + "'"
+
+
 def _view_sql(name: str, path: Path) -> str:
     if not _IDENTIFIER.match(name):
         raise ValueError(f"Nombre de dataset inválido: {name!r}")
@@ -170,8 +174,13 @@ class PeruOpen:
         try:
             for name, path in paths.items():
                 con.execute(_view_sql(name, path))
-            allowed = self.data.objects_dir.as_posix().rstrip("/") + "/"
-            con.execute(f"SET allowed_directories=['{allowed.replace(chr(39), chr(39) * 2)}']")
+            # Solo los archivos exactos que usa la consulta. No se usa
+            # allowed_directories porque en Windows, si el proceso hijo de una
+            # app de la Microsoft Store (p. ej. Claude Desktop) escribió la caché,
+            # la carpeta real está redirigida y DuckDB no reconoce el prefijo.
+            if paths:
+                files = ", ".join(_sql_literal(p.as_posix()) for p in paths.values())
+                con.execute(f"SET allowed_paths=[{files}]")
             con.execute("SET enable_external_access=false")
             con.execute("SET lock_configuration=true")
             timer = threading.Timer(timeout_s, con.interrupt)

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "peruopen"
-version = "0.1.0a4"
+version = "0.1.0a5"
 description = "Datos públicos oficiales del Perú, curados en Parquet y consultables con Python, DuckDB y MCP."
 readme = "README.md"
 license = "MIT"
