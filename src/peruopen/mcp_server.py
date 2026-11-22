@@ -65,7 +65,9 @@ def build_server(pe: PeruOpen | None = None) -> Any:
 
 
 def main() -> None:
-    build_server().run()
+    # Sin el banner de FastMCP: los clientes MCP solo leen stdout, y el banner
+    # (en stderr) ensucia los logs de Claude Desktop sin aportar nada.
+    build_server().run(show_banner=False)
 
 
 if __name__ == "__main__":
