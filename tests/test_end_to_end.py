@@ -117,6 +117,7 @@ def test_unknown_dataset_suggests_name(vitrina: Path, tmp_path: Path) -> None:
         connect(vitrina, tmp_path).describe("macro_uits")
 
 
-def test_missing_config_explains_what_to_do() -> None:
+def test_missing_config_explains_what_to_do(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("peruopen.config.DEFAULT_BASE_URL", None)
     with pytest.raises(peruopen.ConfigError, match="PERUOPEN_BASE_URL"):
         peruopen.PeruOpen()

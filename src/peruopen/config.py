@@ -18,9 +18,10 @@ from platformdirs import user_cache_dir
 
 from .exceptions import ConfigError
 
-# URL pública del bucket de Cloudflare R2. Se completa cuando exista el
-# dominio público; mientras tanto se usa PERUOPEN_BASE_URL.
-DEFAULT_BASE_URL: str | None = None
+# URL pública del bucket `peruopen-data` en Cloudflare R2 (Public Development
+# URL). Cuando haya un dominio propio, se cambia aquí. PERUOPEN_BASE_URL la
+# reemplaza (mirrors, vitrina local en desarrollo).
+DEFAULT_BASE_URL: str | None = "https://pub-063cb658c53b44e2be385336393ba414.r2.dev"
 
 _TRUE = {"1", "true", "yes", "si", "sí"}
 

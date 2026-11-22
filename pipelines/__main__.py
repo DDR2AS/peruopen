@@ -10,11 +10,29 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 
 from .build import build
+from .common import ROOT_DIR
 from .publish import LocalTarget, R2Target, Target, publish
+
+
+def _load_dotenv(path: Path = ROOT_DIR / ".env") -> None:
+    """Carga KEY=valor desde `.env` (no versionado) sin pisar variables ya definidas.
+
+    Así las credenciales de R2 se guardan en un archivo local en vez de
+    escribirlas en la terminal. En GitHub Actions vienen de Secrets.
+    """
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 def _target(args: argparse.Namespace) -> Target:
@@ -28,6 +46,7 @@ def _target(args: argparse.Namespace) -> Target:
 def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
+    _load_dotenv()
     parser = argparse.ArgumentParser(prog="python -m pipelines")
     sub = parser.add_subparsers(dest="command", required=True)
 
